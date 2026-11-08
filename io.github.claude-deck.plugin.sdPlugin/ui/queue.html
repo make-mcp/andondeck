@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>Claude Deck</title>
+		<script src="./libs/sdpi-components.js"></script>
+		<style>
+			.hint { color: #9d9a94; font-size: 11px; line-height: 1.45; padding: 4px 0 8px; }
+			.hint code { color: #d97757; }
+		</style>
+	</head>
+	<body>
+		<sdpi-item label="Prompt">
+			<sdpi-textarea setting="text" rows="5" placeholder="What should Claude do next?" showlength maxlength="2000"></sdpi-textarea>
+		</sdpi-item>
+		<sdpi-item label="Key label">
+			<sdpi-textfield setting="label" placeholder="First words of the prompt"></sdpi-textfield>
+		</sdpi-item>
+		<sdpi-item label="Session">
+			<sdpi-select setting="session" datasource="getSessions" placeholder="Active session"></sdpi-select>
+		</sdpi-item>
+		<sdpi-item label="Duplicates">
+			<sdpi-checkbox setting="allowDuplicates" label="Allow queueing the same prompt twice"></sdpi-checkbox>
+		</sdpi-item>
+		<div class="hint">While Claude is working the prompt is handed over the moment the turn ends. If the session is already idle, the idle-wake helper delivers it — enable that in <strong>Connect Claude Code</strong>.</div>
+	</body>
+</html>

@@ -1,0 +1,54 @@
+{
+  "name": "claude-deck",
+  "version": "0.1.0",
+  "description": "Open-source Stream Deck plugin for Claude Code: live status, prompt queue, permission approvals, slash commands, session switching and usage — straight from your deck.",
+  "license": "MIT",
+  "author": "claude-deck contributors",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/claude-deck/claude-deck.git"
+  },
+  "homepage": "https://github.com/claude-deck/claude-deck#readme",
+  "bugs": {
+    "url": "https://github.com/claude-deck/claude-deck/issues"
+  },
+  "keywords": [
+    "stream-deck",
+    "elgato",
+    "claude",
+    "claude-code",
+    "anthropic",
+    "plugin"
+  ],
+  "type": "module",
+  "private": true,
+  "engines": {
+    "node": ">=20.5.1"
+  },
+  "scripts": {
+    "build": "npm run icons && rollup -c",
+    "watch": "npm run icons && rollup -c -w --watch.onEnd=\"streamdeck restart io.github.claude-deck.plugin\"",
+    "icons": "node scripts/generate-icons.mjs",
+    "validate": "streamdeck validate",
+    "pack": "npm run build && streamdeck pack io.github.claude-deck.plugin.sdPlugin --output dist --force",
+    "link": "streamdeck link io.github.claude-deck.plugin.sdPlugin",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/*.test.mjs",
+    "pretest": "tsc -p tsconfig.test.json && cp .test-build-package.json .test-build/package.json"
+  },
+  "dependencies": {
+    "@elgato/streamdeck": "^2.1.2",
+    "@elgato/utils": "^0.6.2"
+  },
+  "devDependencies": {
+    "@elgato/cli": "^1.10.4",
+    "@rollup/plugin-commonjs": "^28.0.1",
+    "@rollup/plugin-node-resolve": "^16.0.0",
+    "@rollup/plugin-typescript": "^12.1.1",
+    "@types/node": "^22.10.0",
+    "rollup": "^4.28.0",
+    "sharp": "^0.35.0",
+    "tslib": "^2.8.1",
+    "typescript": "^5.7.2"
+  }
+}

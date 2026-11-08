@@ -1,0 +1,5 @@
+# Files excluded from the packaged .streamDeckPlugin
+/logs
+*.map
+*.log
+.DS_Store

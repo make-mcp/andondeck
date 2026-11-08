@@ -1,0 +1,125 @@
+/**
+ * Renders every PNG the manifest references from inline SVG.
+ *
+ * Keeping the artwork as code means the whole icon set stays consistent and
+ * regenerates on `npm run build` instead of living as binary blobs in git.
+ */
+import { mkdir, writeFile } from "node:fs/promises";
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
+
+import sharp from "sharp";
+
+const root = join(dirname(fileURLToPath(import.meta.url)), "..");
+const out = join(root, "io.github.claude-deck.plugin.sdPlugin", "imgs");
+
+const ACCENT = "#d97757";
+const INK = "#f5f3ef";
+const BACKDROP = "#17171a";
+
+const FONT = "'Segoe UI','DejaVu Sans',sans-serif";
+
+/** A glyph centred on a transparent square — used for the action list icons. */
+function listIcon(glyph) {
+	return `<svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 20 20">
+		<text x="10" y="15" font-family="${FONT}" font-size="15" font-weight="700" fill="${INK}" text-anchor="middle">${glyph}</text>
+	</svg>`;
+}
+
+/** A full key tile, matching what the plugin draws at runtime. */
+function keyTile({ glyph, title, tone = ACCENT, solid = false }) {
+	const background = solid ? tone : BACKDROP;
+	const ink = solid ? "#1b1210" : INK;
+
+	return `<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72">
+		<rect width="72" height="72" rx="9" fill="${background}"/>
+		${solid ? "" : `<rect width="72" height="3" fill="${tone}"/>`}
+		<text x="36" y="40" font-family="${FONT}" font-size="26" font-weight="700" fill="${solid ? ink : tone}" text-anchor="middle">${glyph}</text>
+		<text x="36" y="58" font-family="${FONT}" font-size="11" font-weight="600" fill="${ink}" text-anchor="middle">${title}</text>
+	</svg>`;
+}
+
+/** The Marketplace tile: wordmark on the plugin's accent. */
+function marketplaceIcon() {
+	return `<svg xmlns="http://www.w3.org/2000/svg" width="288" height="288" viewBox="0 0 288 288">
+		<rect width="288" height="288" rx="64" fill="${BACKDROP}"/>
+		<g transform="translate(144 128)">
+			<rect x="-66" y="-46" width="60" height="40" rx="7" fill="${ACCENT}"/>
+			<rect x="6" y="-46" width="60" height="40" rx="7" fill="${ACCENT}" opacity=".55"/>
+			<rect x="-66" y="6" width="60" height="40" rx="7" fill="${ACCENT}" opacity=".55"/>
+			<rect x="6" y="6" width="60" height="40" rx="7" fill="${ACCENT}" opacity=".3"/>
+		</g>
+		<text x="144" y="228" font-family="${FONT}" font-size="34" font-weight="700" fill="${INK}" text-anchor="middle">Claude Deck</text>
+	</svg>`;
+}
+
+function categoryIcon() {
+	return `<svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 28 28">
+		<rect x="2" y="3" width="10" height="8" rx="2" fill="${INK}"/>
+		<rect x="15" y="3" width="10" height="8" rx="2" fill="${INK}" opacity=".6"/>
+		<rect x="2" y="15" width="10" height="8" rx="2" fill="${INK}" opacity=".6"/>
+		<rect x="15" y="15" width="10" height="8" rx="2" fill="${INK}" opacity=".35"/>
+	</svg>`;
+}
+
+/**
+ * Writes an SVG as a PNG at 1x and 2x.
+ * @param svg Source markup.
+ * @param target Path without extension, relative to the images directory.
+ * @param size Base width/height in pixels.
+ */
+async function emit(svg, target, size) {
+	const file = join(out, target);
+	await mkdir(dirname(file), { recursive: true });
+
+	const buffer = Buffer.from(svg);
+	await sharp(buffer, { density: 384 }).resize(size, size, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toFile(`${file}.png`);
+	await sharp(buffer, { density: 768 }).resize(size * 2, size * 2, { fit: "contain", background: { r: 0, g: 0, b: 0, alpha: 0 } }).png().toFile(`${file}@2x.png`);
+}
+
+const ACTIONS = [
+	{ dir: "status", glyph: "●", states: [{ name: "idle", glyph: "●", title: "Status" }] },
+	{ dir: "queue", glyph: "+", states: [{ name: "key", glyph: "+", title: "Queue" }] },
+	{ dir: "queue-control", glyph: "≡", states: [{ name: "key", glyph: "≡", title: "Queue" }] },
+	{
+		dir: "approve",
+		glyph: "✓",
+		states: [
+			{ name: "allow", glyph: "✓", title: "Allow", tone: "#5a9e78" },
+			{ name: "deny", glyph: "✕", title: "Deny", tone: "#d4604f" },
+		],
+	},
+	{ dir: "prompt", glyph: "✎", states: [{ name: "key", glyph: "✎", title: "Prompt" }] },
+	{ dir: "session", glyph: "⇄", states: [{ name: "key", glyph: "⇄", title: "Session" }] },
+	{
+		dir: "headless",
+		glyph: "⚡",
+		states: [
+			{ name: "key", glyph: "⚡", title: "Task" },
+			{ name: "running", glyph: "▶", title: "Running", tone: "#d9a157" },
+		],
+	},
+	{ dir: "usage", glyph: "◷", states: [{ name: "key", glyph: "◷", title: "Usage" }] },
+	{
+		dir: "setup",
+		glyph: "⚯",
+		states: [
+			{ name: "disconnected", glyph: "⚯", title: "Connect", tone: "#4a4a4d" },
+			{ name: "connected", glyph: "✓", title: "Connected", tone: "#5a9e78" },
+		],
+	},
+];
+
+await emit(marketplaceIcon(), join("plugin", "marketplace"), 288);
+await emit(categoryIcon(), join("plugin", "category-icon"), 28);
+
+for (const entry of ACTIONS) {
+	await emit(listIcon(entry.glyph), join("actions", entry.dir, "icon"), 20);
+
+	for (const state of entry.states) {
+		await emit(keyTile({ glyph: state.glyph, title: state.title, tone: state.tone }), join("actions", entry.dir, state.name), 72);
+	}
+}
+
+await writeFile(join(out, ".gitattributes"), "*.png binary\n", "utf8");
+console.log(`icons written to ${out}`);

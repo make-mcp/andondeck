@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>Claude Deck</title>
+		<script src="./libs/sdpi-components.js"></script>
+		<style>
+			.hint { color: #9d9a94; font-size: 11px; line-height: 1.45; padding: 4px 0 8px; }
+			.hint code { color: #d97757; }
+		</style>
+	</head>
+	<body>
+		<sdpi-item label="Session">
+			<sdpi-select setting="session" datasource="getSessions" placeholder="Active session"></sdpi-select>
+		</sdpi-item>
+		<sdpi-item label="Headline">
+			<sdpi-select setting="showProject" default="false">
+				<option value="false">Status word</option>
+				<option value="true">Project folder</option>
+			</sdpi-select>
+		</sdpi-item>
+		<sdpi-item label="Current tool">
+			<sdpi-checkbox setting="showTool" default="true" label="Show while working"></sdpi-checkbox>
+		</sdpi-item>
+		<div class="hint">Pressing the key pins whichever session is waiting on you, so every other Claude Deck key follows it.</div>
+	</body>
+</html>

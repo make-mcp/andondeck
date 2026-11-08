@@ -1,0 +1,12 @@
+{
+	"extends": "./tsconfig.json",
+	"compilerOptions": {
+		"module": "NodeNext",
+		"moduleResolution": "NodeNext",
+		"noUnusedLocals": false,
+		"sourceMap": false,
+		"outDir": ".test-build"
+	},
+	"include": ["src/**/*"],
+	"exclude": ["src/plugin.ts", "src/actions/**/*", "src/runtime.ts"]
+}

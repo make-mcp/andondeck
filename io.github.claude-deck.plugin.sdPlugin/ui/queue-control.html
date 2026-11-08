@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>Claude Deck</title>
+		<script src="./libs/sdpi-components.js"></script>
+		<style>
+			.hint { color: #9d9a94; font-size: 11px; line-height: 1.45; padding: 4px 0 8px; }
+			.hint code { color: #d97757; }
+		</style>
+	</head>
+	<body>
+		<sdpi-item label="Key does">
+			<sdpi-select setting="mode" default="browse">
+				<option value="browse">Promote the entry under the cursor</option>
+				<option value="drop-next">Drop the next entry</option>
+				<option value="promote">Promote the last entry</option>
+				<option value="clear">Clear the whole queue</option>
+			</sdpi-select>
+		</sdpi-item>
+		<sdpi-item label="Session">
+			<sdpi-select setting="session" datasource="getSessions" placeholder="Active session"></sdpi-select>
+		</sdpi-item>
+		<div class="hint">On a Stream Deck +, rotate to scroll the queue and press to apply the chosen action to the entry under the cursor.</div>
+	</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>Connect Claude Code</title>
+		<script src="./libs/sdpi-components.js"></script>
+		<style>
+			.hint { color: #9d9a94; font-size: 11px; line-height: 1.45; padding: 4px 0 8px; }
+			.hint code { color: #d97757; }
+			.panel {
+				margin: 6px 0 10px;
+				padding: 8px 10px;
+				border-radius: 6px;
+				background: #1f1f22;
+				font-size: 11px;
+				line-height: 1.6;
+				color: #c9c6c0;
+			}
+			.panel dt { color: #9d9a94; float: left; width: 92px; clear: left; }
+			.panel dd { margin: 0 0 2px 96px; word-break: break-all; }
+			.ok { color: #5a9e78; }
+			.bad { color: #d4604f; }
+			h3 { font-size: 11px; text-transform: uppercase; letter-spacing: .06em; color: #9d9a94; margin: 14px 0 4px; }
+		</style>
+	</head>
+	<body>
+		<h3>Connection</h3>
+		<div class="panel" id="diagnostics">Loading…</div>
+
+		<sdpi-item label="">
+			<sdpi-button invoke="connect">Install hooks</sdpi-button>
+		</sdpi-item>
+		<sdpi-item label="">
+			<sdpi-button invoke="disconnect">Remove hooks</sdpi-button>
+		</sdpi-item>
+		<div class="hint">
+			Writes a <code>hooks</code> block into Claude Code's <code>settings.json</code> and keeps a
+			<code>.claude-deck.bak</code> copy of the previous file. Everything else in that file is left alone.
+		</div>
+
+		<h3>Bridge</h3>
+		<sdpi-item label="Port">
+			<sdpi-textfield setting="port" global default="38274" type="number"></sdpi-textfield>
+		</sdpi-item>
+		<sdpi-item label="WSL">
+			<sdpi-checkbox setting="exposeToWsl" global label="Accept hooks from inside WSL"></sdpi-checkbox>
+		</sdpi-item>
+		<sdpi-item label="Distribution">
+			<sdpi-select setting="distro" global datasource="getDistros" placeholder="Default"></sdpi-select>
+		</sdpi-item>
+		<div class="hint">
+			WSL support binds the bridge to all interfaces so Claude Code inside the distribution can reach it. Every
+			request still has to carry the plugin's private token.
+		</div>
+
+		<h3>Behaviour</h3>
+		<sdpi-item label="Approvals">
+			<sdpi-checkbox setting="deckApprovals" global default="true" label="Answer permission requests from the deck"></sdpi-checkbox>
+		</sdpi-item>
+		<sdpi-item label="Wait up to">
+			<sdpi-range setting="approvalTimeoutSec" global default="45" min="10" max="180" step="5" showlabels></sdpi-range>
+		</sdpi-item>
+		<sdpi-item label="Idle wake">
+			<sdpi-checkbox setting="idleWake" global default="true" label="Let queued prompts wake an idle session"></sdpi-checkbox>
+		</sdpi-item>
+		<div class="hint">
+			Idle wake installs a small generated helper next to your Claude Code settings. Without it, a queued prompt
+			only runs when the current turn ends. Re-install the hooks after changing this.
+		</div>
+
+		<h3>Tasks</h3>
+		<sdpi-item label="Runner">
+			<sdpi-select setting="runner" global default="auto">
+				<option value="auto">Detect automatically</option>
+				<option value="native">Run claude directly</option>
+				<option value="wsl">Run claude inside WSL</option>
+			</sdpi-select>
+		</sdpi-item>
+		<sdpi-item label="Default folder">
+			<sdpi-textfield setting="defaultCwd" global placeholder="Working folder for Run Task keys"></sdpi-textfield>
+		</sdpi-item>
+
+		<script>
+			const panel = document.querySelector("#diagnostics");
+
+			const row = (label, value, tone) =>
+				`<dt>${label}</dt><dd${tone ? ` class="${tone}"` : ""}>${value ?? "—"}</dd>`;
+
+			function render(data) {
+				panel.innerHTML = `<dl>
+					${row("Bridge", data.listening ? "listening" : (data.error ?? "not listening"), data.listening ? "ok" : "bad")}
+					${row("Hooks", data.hooksInstalled ? "installed" : "not installed", data.hooksInstalled ? "ok" : "bad")}
+					${row("Hook URL", data.baseUrl)}
+					${row("Claude at", data.locationKind === "wsl" ? `WSL · ${data.settings?.distro || "default"}` : "this machine")}
+					${row("Settings", data.settingsPath)}
+					${row("Sessions", (data.sessions ?? []).length
+						? data.sessions.map((s) => `${s.project} · ${s.status}`).join("<br />")
+						: "none seen yet")}
+				</dl>`;
+			}
+
+			const client = SDPIComponents.streamDeckClient;
+
+			// The plugin answers every command with a fresh diagnostics payload.
+			client.sendToPropertyInspector.subscribe((ev) => {
+				if (ev?.payload?.event === "diagnostics") {
+					render(ev.payload.data ?? {});
+				}
+			});
+
+			const refresh = () => client.send("sendToPlugin", { event: "diagnostics" });
+
+			refresh();
+			setInterval(refresh, 3000);
+		</script>
+	</body>
+</html>

@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>Claude Deck</title>
+		<script src="./libs/sdpi-components.js"></script>
+		<style>
+			.hint { color: #9d9a94; font-size: 11px; line-height: 1.45; padding: 4px 0 8px; }
+			.hint code { color: #d97757; }
+		</style>
+	</head>
+	<body>
+		<sdpi-item label="Preset">
+			<sdpi-select setting="preset" datasource="getPresets" default="custom"></sdpi-select>
+		</sdpi-item>
+		<sdpi-item label="Custom prompt">
+			<sdpi-textarea setting="text" rows="4" placeholder="Only used with the Custom preset" showlength maxlength="2000"></sdpi-textarea>
+		</sdpi-item>
+		<sdpi-item label="Key label">
+			<sdpi-textfield setting="label" placeholder="Preset name"></sdpi-textfield>
+		</sdpi-item>
+		<sdpi-item label="Order">
+			<sdpi-checkbox setting="priority" label="Run before anything already queued"></sdpi-checkbox>
+		</sdpi-item>
+		<sdpi-item label="Queue">
+			<sdpi-checkbox setting="replaceQueue" label="Clear the queue first"></sdpi-checkbox>
+		</sdpi-item>
+		<sdpi-item label="Session">
+			<sdpi-select setting="session" datasource="getSessions" placeholder="Active session"></sdpi-select>
+		</sdpi-item>
+		<div class="hint">Slash commands work here too: <code>/compact</code>, <code>/review</code>, or any command your project defines.</div>
+	</body>
+</html>

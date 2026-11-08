@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>Claude Deck</title>
+		<script src="./libs/sdpi-components.js"></script>
+		<style>
+			.hint { color: #9d9a94; font-size: 11px; line-height: 1.45; padding: 4px 0 8px; }
+			.hint code { color: #d97757; }
+		</style>
+	</head>
+	<body>
+		<sdpi-item label="Key does">
+			<sdpi-select setting="mode" default="cycle">
+				<option value="cycle">Step through open sessions</option>
+				<option value="pin">Pin one specific session</option>
+			</sdpi-select>
+		</sdpi-item>
+		<sdpi-item label="Pinned session">
+			<sdpi-select setting="target" datasource="getSessions" placeholder="Pick a session"></sdpi-select>
+		</sdpi-item>
+		<div class="hint">With nothing pinned, every Claude Deck key follows the most recently active session — preferring one that is waiting on you.</div>
+	</body>
+</html>

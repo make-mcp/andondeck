@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>Claude Deck</title>
+		<script src="./libs/sdpi-components.js"></script>
+		<style>
+			.hint { color: #9d9a94; font-size: 11px; line-height: 1.45; padding: 4px 0 8px; }
+			.hint code { color: #d97757; }
+		</style>
+	</head>
+	<body>
+		<sdpi-item label="Task">
+			<sdpi-textarea setting="prompt" rows="5" placeholder="Review the current diff and list anything risky." showlength maxlength="4000"></sdpi-textarea>
+		</sdpi-item>
+		<sdpi-item label="Key label">
+			<sdpi-textfield setting="label" placeholder="First words of the task"></sdpi-textfield>
+		</sdpi-item>
+		<sdpi-item label="Folder">
+			<sdpi-textfield setting="cwd" placeholder="Default folder from plugin settings"></sdpi-textfield>
+		</sdpi-item>
+		<sdpi-item label="Model">
+			<sdpi-textfield setting="model" placeholder="Leave empty for your default"></sdpi-textfield>
+		</sdpi-item>
+		<sdpi-item label="Permissions">
+			<sdpi-select setting="permissionMode" default="">
+				<option value="">Claude Code default</option>
+				<option value="plan">Plan only</option>
+				<option value="acceptEdits">Accept edits</option>
+			</sdpi-select>
+		</sdpi-item>
+		<sdpi-item label="Extra arguments">
+			<sdpi-textfield setting="extraArgs" placeholder="--allowedTools Read,Grep"></sdpi-textfield>
+		</sdpi-item>
+		<sdpi-item label="Runner">
+			<sdpi-select setting="runner" default="">
+				<option value="">Plugin default</option>
+				<option value="native">Run claude directly</option>
+				<option value="wsl">Run claude inside WSL</option>
+			</sdpi-select>
+		</sdpi-item>
+		<sdpi-item label="WSL distribution">
+			<sdpi-select setting="distro" datasource="getDistros" placeholder="Default"></sdpi-select>
+		</sdpi-item>
+		<sdpi-item label="Timeout">
+			<sdpi-range setting="timeoutSec" default="300" min="30" max="1800" step="30" showlabels></sdpi-range>
+		</sdpi-item>
+		<div class="hint">Runs in its own <code>claude -p</code> process, so your open session is never disturbed. The key shows the result for 20 seconds.</div>
+	</body>
+</html>
