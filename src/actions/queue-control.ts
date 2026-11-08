@@ -61,10 +61,9 @@ export class QueueControlAction extends DeckAction<QueueControlSettings> {
 		await unit.setImage(
 			tile({
 				tone: queue.length ? "accent" : "offline",
-				eyebrow: "queue",
-				glyph: labels[mode].glyph,
-				title: labels[mode].title,
-				subtitle: queue.length ? keyLabel(queue[0].label || queue[0].text, 22) : "empty",
+				eyebrow: "Queue",
+				headline: labels[mode].title,
+				subtitle: queue.length ? keyLabel(queue[0].label || queue[0].text, 22) : "Empty",
 				badge: queue.length || undefined,
 			}),
 		);

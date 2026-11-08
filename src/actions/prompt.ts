@@ -72,9 +72,9 @@ export class PromptAction extends DeckAction<PromptSettings> {
 		await key.setImage(
 			tile({
 				tone: text ? "accent" : "offline",
-				glyph,
-				title: label,
-				subtitle: session ? (session.status === "working" ? "queues next" : "sends next") : "no session",
+				eyebrow: glyph,
+				headline: label,
+				subtitle: session ? (session.status === "working" ? "Queues next" : "Sends next") : "No session",
 				badge: settings.priority ? "↑" : undefined,
 			}),
 		);

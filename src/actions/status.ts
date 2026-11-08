@@ -92,7 +92,7 @@ export class StatusAction extends DeckAction<StatusSettings> {
 				tile({
 					tone: "offline",
 					headline: "No session",
-					subtitle: runtime.settings.hooksInstalled ? "Start Claude Code" : "Not connected yet",
+					subtitle: runtime.settings.hooksInstalled ? "Start Claude Code" : "Not connected",
 				}),
 			);
 			return;
@@ -118,17 +118,21 @@ export class StatusAction extends DeckAction<StatusSettings> {
 			session.status === "waiting" && session.pending
 				? session.pending.summary
 				: session.status === "error"
-					? (session.lastError ?? WORDS.error)
+					? session.lastError
 					: session.status === "working"
-						? (settings.showTool === false ? undefined : session.currentTool) ?? WORDS.working
-						: WORDS[session.status];
+						? [settings.showTool === false ? undefined : session.currentTool, elapsed ? duration(elapsed) : undefined]
+								.filter(Boolean)
+								.join("  ")
+						: mode;
 
 		return {
 			tone: TONES[session.status],
 			edge: EDGES[session.status],
 			phase: animationPhase(),
-			eyebrow: mode ?? (session.status === "working" && elapsed ? duration(elapsed) : undefined),
-			headline: settings.showProject === false ? WORDS[session.status] : session.project,
+			// The project identifies the key; the state word is what you read.
+			eyebrow: settings.showProject === false ? mode : session.project,
+			headline: WORDS[session.status],
+			headlineTone: "state" as const,
 			subtitle,
 			badge: session.queue.length > 0 ? session.queue.length : undefined,
 			progress:

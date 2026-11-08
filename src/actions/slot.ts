@@ -22,6 +22,15 @@ const TONES: Record<SessionStatus, TileTone> = {
 	ended: "offline",
 };
 
+const WORDS: Record<SessionStatus, string> = {
+	idle: "Idle",
+	working: "Working",
+	waiting: "Approve?",
+	compacting: "Compacting",
+	error: "Failed",
+	ended: "Ended",
+};
+
 const EDGES: Record<SessionStatus, EdgeMotion> = {
 	idle: "quiet",
 	working: "travel",
@@ -69,18 +78,15 @@ export class SlotAction extends DeckAction<SlotSettings> {
 				tone: TONES[session.status],
 				edge: EDGES[session.status],
 				phase: animationPhase(),
-				eyebrow: pinned ? "Pinned" : session.status === "working" && elapsed ? duration(elapsed) : `Slot ${index + 1}`,
-				headline: session.project,
+				eyebrow: pinned ? `📌 ${session.project}` : session.project,
+				headline: WORDS[session.status],
+				headlineTone: "state",
 				subtitle:
 					session.status === "waiting" && session.pending
 						? session.pending.summary
 						: session.status === "working"
-							? (session.currentTool ?? "Working")
-							: session.status === "error"
-								? "Failed"
-								: session.status === "idle"
-									? "Idle"
-									: session.status,
+							? [session.currentTool, elapsed ? duration(elapsed) : undefined].filter(Boolean).join("  ")
+							: undefined,
 				badge: session.queue.length || undefined,
 			}),
 		);

@@ -13,7 +13,22 @@ type SetupSettings = JsonObject;
 
 /** `sdpi-button invoke="…"` posts its action name as `event`. */
 type SetupMessage = {
-	event?: "connect" | "disconnect" | "diagnostics";
+	event?: "connect" | "disconnect" | "diagnostics" | "useProfile";
+};
+
+/**
+ * The bundled profile for each device type, keyed by Stream Deck's own numbers.
+ *
+ * Installing a profile is not the same as landing on it, and a profile the user
+ * cannot find is the same as no profile at all — so the setup can switch to it
+ * directly.
+ */
+const PROFILE_FOR_DEVICE: Record<number, string> = {
+	0: "profiles/Claude Deck",
+	1: "profiles/Claude Deck Mini",
+	2: "profiles/Claude Deck XL",
+	7: "profiles/Claude Deck Plus",
+	9: "profiles/Claude Deck Neo",
 };
 
 /**
@@ -36,9 +51,10 @@ export class SetupAction extends DeckAction<SetupSettings> {
 			await key.setImage(
 				tile({
 					tone: "error",
-					eyebrow: "bridge",
-					glyph: "!",
-					title: "Port blocked",
+					edge: "broken",
+					eyebrow: "Bridge",
+					headline: "Blocked",
+					headlineTone: "state",
 					subtitle: `Port ${runtime.settings.port}`,
 				}),
 			);
@@ -48,11 +64,11 @@ export class SetupAction extends DeckAction<SetupSettings> {
 		const sessions = runtime.store.list().length;
 		await key.setImage(
 			tile({
-				tone: connected ? "idle" : "offline",
-				eyebrow: "claude deck",
-				glyph: connected ? "✓" : "⚯",
-				title: connected ? "Connected" : "Connect",
-				subtitle: connected ? `${sessions} session${sessions === 1 ? "" : "s"}` : "Press to install hooks",
+				tone: connected ? "working" : "accent",
+				eyebrow: "Claude Deck",
+				headline: connected ? "Connected" : "Connect",
+				headlineTone: connected ? "state" : "ink",
+				subtitle: connected ? `${sessions} session${sessions === 1 ? "" : "s"}` : "Installs the hooks",
 				badge: connected && sessions === 0 ? "?" : undefined,
 			}),
 		);
@@ -83,6 +99,19 @@ export class SetupAction extends DeckAction<SetupSettings> {
 		this.repaint();
 	}
 
+	/** Switches every connected deck to the layout built for it. */
+	async #useProfile(): Promise<void> {
+		for (const device of streamDeck.devices) {
+			const profile = PROFILE_FOR_DEVICE[device.type as number];
+			if (!profile || !device.isConnected) {
+				continue;
+			}
+
+			streamDeck.logger.info(`switching ${device.name} to ${profile}`);
+			await streamDeck.profiles.switchToProfile(device.id, profile);
+		}
+	}
+
 	override async onSendToPlugin(ev: SendToPluginEvent<JsonValue, SetupSettings>): Promise<void> {
 		const message = ev.payload as SetupMessage;
 
@@ -94,6 +123,10 @@ export class SetupAction extends DeckAction<SetupSettings> {
 				}
 				case "disconnect": {
 					await runtime.disconnect();
+					break;
+				}
+				case "useProfile": {
+					await this.#useProfile();
 					break;
 				}
 				default:

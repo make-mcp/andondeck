@@ -37,8 +37,7 @@ export class AutopilotAction extends DeckAction<AutopilotSettings> {
 				tile({
 					tone: "accent",
 					eyebrow: "Autopilot",
-					glyph: "◎",
-					title: "Off",
+					headline: "Off",
 					subtitle: scope === "all" ? "Arms everything" : "Arms read-only",
 				}),
 			);
@@ -54,8 +53,7 @@ export class AutopilotAction extends DeckAction<AutopilotSettings> {
 				tone: active.mode === "all" ? "error" : "accent",
 				solid: true,
 				eyebrow: "Autopilot",
-				glyph: "◉",
-				title: active.mode === "all" ? "All tools" : "Read-only",
+				headline: active.mode === "all" ? "All tools" : "Read-only",
 				subtitle: active.until ? duration(remaining) : "Until pressed",
 				progress: active.until && settings.minutes ? remaining / (settings.minutes * 60_000) : undefined,
 			}),

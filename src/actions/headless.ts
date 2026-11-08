@@ -2,7 +2,7 @@ import { action, type KeyDownEvent } from "@elgato/streamdeck";
 import type { JsonObject } from "@elgato/utils";
 import streamDeck from "@elgato/streamdeck";
 
-import { DeckAction, type AnyAction } from "./base.js";
+import { DeckAction, animationPhase, type AnyAction } from "./base.js";
 import { runtime } from "../runtime.js";
 import { keyLabel } from "../bridge/summarize.js";
 import { duration, tile } from "../ui/render.js";
@@ -43,6 +43,11 @@ const DEFAULT_TASK = "Review the current git diff and list anything risky in a f
  */
 @action({ UUID: "io.github.claude-deck.plugin.headless" })
 export class HeadlessAction extends DeckAction<HeadlessSettings> {
+	protected override animates(key: AnyAction<HeadlessSettings>): boolean {
+		const run = runs.get(key.id);
+		return run !== undefined && run.done === undefined;
+	}
+
 	protected override async draw(key: AnyAction<HeadlessSettings>, settings: HeadlessSettings): Promise<void> {
 		if (!key.isKey()) {
 			return;
@@ -56,9 +61,10 @@ export class HeadlessAction extends DeckAction<HeadlessSettings> {
 			await key.setImage(
 				tile({
 					tone: "working",
-					eyebrow: "running",
-					glyph: "▶",
-					title: label,
+					edge: "travel",
+					phase: animationPhase(),
+					eyebrow: "Running",
+					headline: label,
 					subtitle: duration(Date.now() - run.startedAt),
 				}),
 			);
@@ -69,10 +75,9 @@ export class HeadlessAction extends DeckAction<HeadlessSettings> {
 			await key.setState(0);
 			await key.setImage(
 				tile({
-					tone: run.done.ok ? "idle" : "error",
-					eyebrow: run.done.ok ? `done · ${duration(run.done.durationMs)}` : "failed",
-					glyph: run.done.ok ? "✓" : "!",
-					title: label,
+					tone: run.done.ok ? "working" : "error",
+					eyebrow: run.done.ok ? `Done in ${duration(run.done.durationMs)}` : "Failed",
+					headline: label,
 					subtitle: keyLabel(run.done.text, 30),
 				}),
 			);
@@ -84,10 +89,9 @@ export class HeadlessAction extends DeckAction<HeadlessSettings> {
 		await key.setImage(
 			tile({
 				tone: "accent",
-				eyebrow: "task",
-				glyph: "⚡",
-				title: label,
-				subtitle: settings.cwd ? keyLabel(settings.cwd, 24) : "default folder",
+				eyebrow: "Task",
+				headline: label,
+				subtitle: settings.cwd ? keyLabel(settings.cwd, 24) : "Default folder",
 			}),
 		);
 	}

@@ -112,9 +112,11 @@ export type TileOptions = {
 	tone: TileTone;
 	/** Large mark in the upper half; omit for text-only keys. */
 	glyph?: string;
-	/** Primary line, set larger than {@link TileOptions.title}. Use one or the other. */
+	/** The line you read at a glance. Give it one or two words. */
 	headline?: string;
-	/** Primary caption, sentence case. */
+	/** Draws the headline in the state colour, the way a status word should read. */
+	headlineTone?: "ink" | "state";
+	/** Deprecated alias for {@link TileOptions.headline}. */
 	title?: string;
 	/** Secondary caption, quieter. */
 	subtitle?: string;
@@ -132,10 +134,10 @@ export type TileOptions = {
 	phase?: number;
 };
 
-type TextLine = { text: string; size: number; color: string; weight: number; y?: number };
+type TextLine = { text: string; size: number; color: string; weight: number; y: number };
 
 /** Usable width inside the key, leaving room for the border. */
-const CONTENT_WIDTH = 58;
+const CONTENT_WIDTH = 62;
 
 /**
  * Approximate rendered width of a string.
@@ -148,11 +150,10 @@ const CONTENT_WIDTH = 58;
  * @returns Width in units.
  */
 function measure(value: string, size: number, weight: number): number {
-	// Sized for the widest plausible host font rather than the intended one.
-	// `textLength` is not honoured by every SVG renderer, so the estimate has to
-	// hold on its own; text a little small beats a project name running off the
-	// edge of the key.
-	return value.length * size * (weight >= 600 ? 0.68 : 0.60);
+	// Segoe UI on Windows, SF Pro on macOS — the deck reports which it uses.
+	// `textLength` keeps a wider fallback font in line, so these can be honest
+	// rather than defensive; being defensive here is what made the text small.
+	return value.length * size * (weight >= 600 ? 0.58 : 0.53);
 }
 
 /**
@@ -197,52 +198,15 @@ function autoFit(value: string, max: number, min: number, weight: number): { siz
  * @param line The line, with its baseline resolved.
  * @returns SVG markup.
  */
-function text(line: Required<TextLine>): string {
-	const width = Math.min(CONTENT_WIDTH, measure(line.text, line.size, line.weight));
+function text(line: TextLine): string {
+	// Last guard: trim anything still too long, so a caption cannot run off the
+	// key even on a renderer that ignores textLength.
+	const perChar = line.size * (line.weight >= 600 ? 0.58 : 0.53);
+	const fits = Math.max(1, Math.floor(CONTENT_WIDTH / perChar));
+	const value = line.text.length > fits ? `${line.text.slice(0, fits - 1)}…` : line.text;
+	const width = Math.min(CONTENT_WIDTH, measure(value, line.size, line.weight));
 
-	return `<text x="36" y="${line.y.toFixed(1)}" font-family="${FONT}" font-size="${line.size}" font-weight="${line.weight}" fill="${line.color}" text-anchor="middle" textLength="${width.toFixed(1)}" lengthAdjust="spacingAndGlyphs">${escapeXml(line.text)}</text>`;
-}
-
-/**
- * Stacks the body lines in the space left between the eyebrow and the footer.
- *
- * Centring the block rather than accumulating from the top keeps a one-line key
- * and a three-line key looking like members of the same set.
- * @param entries Lines to place.
- * @param top First usable baseline area.
- * @param bottom Last usable position.
- * @returns SVG markup.
- */
-function stack(entries: TextLine[], top: number, bottom: number): string {
-	const visible = entries.filter((line) => line.text);
-	if (visible.length === 0) {
-		return "";
-	}
-
-	// Line height, not font size: ascenders and descenders need the difference,
-	// otherwise the last line sits on the bottom edge of the key.
-	const gaps = (visible.length - 1) * 1.5;
-	const natural = visible.reduce((sum, line) => sum + line.size * 1.14, 0) + gaps;
-
-	// A key with an eyebrow, a mark, a title and a caption can ask for more room
-	// than it has. Scale the whole block rather than letting the last line fall
-	// off the bottom edge.
-	const scale = Math.min(1, (bottom - top - gaps) / Math.max(1, natural - gaps));
-	const scaled = visible.map((line) => ({ ...line, size: Math.round(line.size * scale * 2) / 2 }));
-	const heights = scaled.map((line) => line.size * 1.14);
-	const height = heights.reduce((sum, value) => sum + value, 0) + gaps;
-
-	let cursor = top + Math.max(0, (bottom - top - height) / 2);
-
-	return scaled
-		.map((line, index) => {
-			// Place the baseline, leaving room below it for descenders.
-			cursor += heights[index] * 0.82;
-			const markup = text({ ...line, y: cursor });
-			cursor += heights[index] * 0.18 + 1.5;
-			return markup;
-		})
-		.join("");
+	return `<text x="36" y="${line.y.toFixed(1)}" font-family="${FONT}" font-size="${line.size}" font-weight="${line.weight}" fill="${line.color}" text-anchor="middle" textLength="${width.toFixed(1)}" lengthAdjust="spacingAndGlyphs">${escapeXml(value)}</text>`;
 }
 
 /**
@@ -306,37 +270,58 @@ export function tile(options: TileOptions): string {
 	const dim = solid ? "rgba(26,21,18,.68)" : PALETTE.inkDim;
 	const phase = options.phase ?? 0;
 
-	const body: TextLine[] = [];
+	// Three slots, never more. A key crammed with four elements has to shrink
+	// all of them, which is exactly what makes it unreadable at arm's length.
+	const headline = options.headline ?? options.title;
+	const hasTop = Boolean(options.eyebrow);
+	const hasBottom = Boolean(options.subtitle);
 
-	if (options.glyph) {
-		const size = options.glyph.length > 3 ? 19 : options.glyph.length > 1 ? 24 : 29;
-		body.push({ text: options.glyph, size, color: solid ? ink : tone, weight: 700 });
+	const top = hasTop ? text({ text: options.eyebrow!, size: 9, color: dim, weight: 600, y: 14 }) : "";
+	const bottomY = options.progress === undefined ? 65 : 59;
+	const bottom = hasBottom
+		? (() => {
+				const { size, rows } = autoFit(options.subtitle!, 9.5, 7.5, 500);
+				return rows
+					.slice(0, 2)
+					.map((row, index) => text({ text: row, size, color: dim, weight: 500, y: bottomY - (rows.length - 1 - index) * (size + 1.5) }))
+					.join("");
+			})()
+		: "";
+
+	// The middle band gets whatever the other two leave, and the headline is
+	// sized to fill it rather than to fit around a mark.
+	const bandTop = hasTop ? 19 : 8;
+	const bandBottom = hasBottom ? bottomY - 13 : options.progress === undefined ? 66 : 58;
+
+	let middle = "";
+	if (headline) {
+		const { size, rows } = autoFit(headline, Math.min(19, (bandBottom - bandTop) / (headline.includes(" ") ? 2.1 : 1.25)), 9.5, 650);
+		const height = rows.length * size * 1.14;
+		let y = bandTop + Math.max(0, (bandBottom - bandTop - height) / 2);
+		middle = rows
+			.map((row) => {
+				y += size * 1.14 * 0.82;
+				const markup = text({
+					text: row,
+					size,
+					color: options.headlineTone === "state" && !solid ? tone : ink,
+					weight: 650,
+					y,
+				});
+				y += size * 1.14 * 0.18;
+				return markup;
+			})
+			.join("");
+	} else if (options.glyph) {
+		const size = Math.min(30, (bandBottom - bandTop) * 0.9);
+		middle = text({
+			text: options.glyph,
+			size,
+			color: solid ? ink : tone,
+			weight: 700,
+			y: bandTop + (bandBottom - bandTop) / 2 + size * 0.36,
+		});
 	}
-
-	if (options.headline) {
-		const { size, rows } = autoFit(options.headline, 15, 10, 650);
-		for (const row of rows) {
-			body.push({ text: row, size, color: ink, weight: 650 });
-		}
-	}
-
-	if (options.title) {
-		const { size, rows } = autoFit(options.title, 12, 8.5, 600);
-		for (const row of rows) {
-			body.push({ text: row, size, color: ink, weight: 600 });
-		}
-	}
-
-	if (options.subtitle) {
-		const { size, rows } = autoFit(options.subtitle, 9.5, 7.5, 500);
-		for (const row of rows) {
-			body.push({ text: row, size, color: dim, weight: 500 });
-		}
-	}
-
-	// The footer is reserved when a bar is drawn, so the two never collide.
-	const top = options.eyebrow ? 17 : 9;
-	const bottom = options.progress === undefined ? 66 : 58;
 
 	const bar =
 		options.progress === undefined
@@ -354,8 +339,9 @@ export function tile(options: TileOptions): string {
 	return toDataUri(`<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72">
 		<rect width="72" height="72" rx="9" fill="${field}"/>
 		${solid ? "" : edge(options.edge ?? "quiet", tone, phase)}
-		${options.eyebrow ? text({ text: options.eyebrow, size: 8, color: dim, weight: 600, y: 14 }) : ""}
-		${stack(body, top, bottom)}
+		${top}
+		${middle}
+		${bottom}
 		${bar}
 		${badge}
 	</svg>`);

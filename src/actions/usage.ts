@@ -71,9 +71,8 @@ export class UsageAction extends DeckAction<UsageSettings> {
 			tile({
 				tone: view.tone,
 				eyebrow: view.title,
-				glyph: view.value,
-				title: view.subtitle,
-				subtitle: session?.project,
+				headline: view.value,
+				subtitle: view.subtitle,
 				progress: view.progress,
 			}),
 		);

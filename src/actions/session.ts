@@ -55,10 +55,9 @@ export class SessionAction extends DeckAction<SessionSettings> {
 
 		await unit.setImage(
 			tile({
-				tone: shown ? (pinnedId && pinnedId === shown.sessionId ? "accent" : "idle") : "offline",
-				eyebrow: settings.mode === "pin" ? "pin" : "session",
-				glyph: pinnedId && shown && pinnedId === shown.sessionId ? "📌" : "⇄",
-				title: shown?.project ?? "No session",
+				tone: shown ? "accent" : "offline",
+				eyebrow: pinnedId && shown && pinnedId === shown.sessionId ? "Pinned" : "Session",
+				headline: shown?.project ?? "None",
 				subtitle: shown ? `${sessions.length} open` : "Start Claude Code",
 				badge: shown?.queue.length || undefined,
 			}),

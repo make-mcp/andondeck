@@ -6,7 +6,7 @@ import {
 } from "@elgato/streamdeck";
 import type { JsonObject } from "@elgato/utils";
 
-import { DeckAction, type AnyAction, type SessionScoped } from "./base.js";
+import { DeckAction, animationPhase, type AnyAction, type SessionScoped } from "./base.js";
 import { runtime } from "../runtime.js";
 import { duration, tile } from "../ui/render.js";
 
@@ -40,6 +40,10 @@ export class ApproveAction extends DeckAction<ApproveSettings> {
 		armed.delete(ev.action.id);
 	}
 
+	protected override animates(_key: AnyAction<ApproveSettings>, settings: ApproveSettings): boolean {
+		return runtime.store.firstPending(settings.session) !== undefined;
+	}
+
 	protected override async draw(key: AnyAction<ApproveSettings>, settings: ApproveSettings): Promise<void> {
 		if (!key.isKey()) {
 			return;
@@ -53,10 +57,8 @@ export class ApproveAction extends DeckAction<ApproveSettings> {
 			await key.setImage(
 				tile({
 					tone: "offline",
-					eyebrow: verdict,
-					glyph: verdict === "allow" ? "✓" : "✕",
-					title: "Nothing to answer",
-					subtitle: runtime.settings.deckApprovals ? "Watching" : "Deck approvals off",
+					headline: verdict === "allow" ? "Allow" : "Deny",
+					subtitle: runtime.settings.deckApprovals ? "Nothing to answer" : "Deck approvals off",
 				}),
 			);
 			return;
@@ -68,11 +70,13 @@ export class ApproveAction extends DeckAction<ApproveSettings> {
 
 		await key.setImage(
 			tile({
-				tone: isArmed ? "working" : verdict === "allow" ? "idle" : "error",
+				tone: isArmed ? "waiting" : verdict === "allow" ? "working" : "error",
 				solid: isArmed,
-				eyebrow: isArmed ? "press again" : `${verdict} · ${duration(remaining)}`,
-				glyph: verdict === "allow" ? "✓" : "✕",
-				title: pending.toolName,
+				edge: "pulse",
+				phase: animationPhase(),
+				eyebrow: isArmed ? "Press again" : `${pending.toolName}  ${duration(remaining)}`,
+				headline: verdict === "allow" ? "Allow" : "Deny",
+				headlineTone: "state",
 				subtitle: pending.summary.replace(`${pending.toolName}: `, "") || session.project,
 				progress: remaining / Math.max(1, pending.expiresAt - pending.receivedAt),
 			}),

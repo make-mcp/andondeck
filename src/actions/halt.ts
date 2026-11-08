@@ -32,9 +32,8 @@ export class HaltAction extends DeckAction<HaltSettings> {
 				tile({
 					tone: "error",
 					solid: true,
-					eyebrow: "stopped",
-					glyph: "■",
-					title: "Resume",
+					eyebrow: "Stopped",
+					headline: "Resume",
 					subtitle: `${session.haltedCalls} call${session.haltedCalls === 1 ? "" : "s"} blocked`,
 				}),
 			);
@@ -45,10 +44,9 @@ export class HaltAction extends DeckAction<HaltSettings> {
 		await key.setImage(
 			tile({
 				tone: session?.status === "working" ? "error" : "offline",
-				eyebrow: "brake",
-				glyph: "■",
-				title: "Stop",
-				subtitle: session?.status === "working" ? (session.currentTool ?? session.project) : "nothing running",
+				headline: "Stop",
+				headlineTone: session?.status === "working" ? "state" : "ink",
+				subtitle: session?.status === "working" ? (session.currentTool ?? session.project) : "Nothing running",
 			}),
 		);
 	}

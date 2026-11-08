@@ -47,11 +47,10 @@ export class LaunchAction extends DeckAction<LaunchSettings> {
 
 			await key.setImage(
 				tile({
-					tone: session ? "idle" : "working",
-					eyebrow: session ? "running" : "starting",
-					glyph: session ? "✓" : "▸",
-					title: caption,
-					subtitle: session ? session.status : "terminal opening",
+					tone: session ? "working" : "idle",
+					eyebrow: session ? "Running" : "Starting",
+					headline: caption,
+					subtitle: session ? session.status : "Opening terminal",
 				}),
 			);
 			return;
@@ -61,10 +60,9 @@ export class LaunchAction extends DeckAction<LaunchSettings> {
 		await key.setImage(
 			tile({
 				tone: "accent",
-				eyebrow: settings.resume ? "resume" : "launch",
-				glyph: "▸",
-				title: caption,
-				subtitle: folder ? (settings.model || "default model") : "set a folder",
+				eyebrow: settings.resume ? "Resume" : "Launch",
+				headline: caption,
+				subtitle: folder ? settings.model || "Default model" : "Set a folder",
 			}),
 		);
 	}

@@ -53,10 +53,9 @@ export class QueuePromptAction extends DeckAction<QueueSettings> {
 		await key.setImage(
 			tile({
 				tone: idleHint ? "waiting" : "accent",
-				eyebrow: "queue",
-				glyph: fromClipboard ? "⎘" : "+",
-				title: caption,
-				subtitle: idleHint ? "Idle — send a message" : session ? session.project : "No session",
+				eyebrow: fromClipboard ? "Queue clipboard" : "Queue",
+				headline: caption,
+				subtitle: idleHint ? "Session is idle" : session?.project,
 				badge: queued || undefined,
 			}),
 		);

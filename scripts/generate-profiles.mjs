@@ -271,7 +271,7 @@ manifest.Profiles = DEVICES.map((device) => ({
 	DeviceType: device.deviceType,
 	Readonly: false,
 	DontAutoSwitchWhenInstalled: true,
-	AutoInstall: false,
+	AutoInstall: true,
 }));
 await writeFile(manifestPath, `${JSON.stringify(manifest, null, "\t")}\n`, "utf8");
 console.log(`manifest updated with ${manifest.Profiles.length} profiles`);
