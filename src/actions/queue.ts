@@ -21,6 +21,15 @@ type QueueSettings = SessionScoped & {
 } & JsonObject;
 
 /**
+ * What an unconfigured key queues.
+ *
+ * A key dragged off the list has no prompt yet, and refusing every press until
+ * someone opens the settings is the worst possible first impression. This is
+ * useful on its own and visible on the key, so it is never a surprise.
+ */
+const DEFAULT_PROMPT = "Continue where you left off.";
+
+/**
  * Queues a prompt for the next turn.
  *
  * While Claude is working the `Stop` hook feeds it straight back in; when the
@@ -36,15 +45,14 @@ export class QueuePromptAction extends DeckAction<QueueSettings> {
 		const session = runtime.store.resolve(settings.session);
 		const queued = runtime.store.queueFor(settings.session).length;
 		const fromClipboard = settings.source === "clipboard";
-		const ready = fromClipboard || Boolean(settings.text);
 		const caption =
-			settings.label || (fromClipboard ? "Clipboard" : settings.text ? keyLabel(settings.text, 28) : "Set a prompt");
+			settings.label || (fromClipboard ? "Clipboard" : keyLabel(settings.text || DEFAULT_PROMPT, 28));
 
 		const idleHint = session?.status === "idle" && queued > 0 && !runtime.settings.idleWake;
 
 		await key.setImage(
 			tile({
-				tone: ready ? (idleHint ? "waiting" : "accent") : "offline",
+				tone: idleHint ? "waiting" : "accent",
 				eyebrow: "queue",
 				glyph: fromClipboard ? "⎘" : "+",
 				title: caption,
@@ -56,10 +64,10 @@ export class QueuePromptAction extends DeckAction<QueueSettings> {
 
 	override async onKeyDown(ev: KeyDownEvent<QueueSettings>): Promise<void> {
 		const { text, session, label, allowDuplicates, source, template } = ev.payload.settings;
-		const prompt = source === "clipboard" ? await this.#fromClipboard(template) : text?.trim();
+		const prompt = source === "clipboard" ? await this.#fromClipboard(template) : text?.trim() || DEFAULT_PROMPT;
 
 		if (!prompt) {
-			await this.refuse(ev.action, source === "clipboard" ? "Clipboard is empty" : "Set a prompt first");
+			await this.refuse(ev.action, "Clipboard is empty");
 			return;
 		}
 

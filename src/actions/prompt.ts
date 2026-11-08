@@ -43,13 +43,18 @@ export const PRESETS: Preset[] = [
 	{ id: "custom", label: "Custom…", text: "", glyph: "✎" },
 ];
 
+/** Used when a key is dragged in and pressed before anyone opens its settings. */
+const DEFAULT_PRESET = "continue";
+
 function resolvePreset(settings: PromptSettings): { text: string; label: string; glyph: string } {
-	const preset = PRESETS.find((entry) => entry.id === settings.preset);
+	const preset = PRESETS.find((entry) => entry.id === (settings.preset ?? DEFAULT_PRESET));
 
 	if (!preset || preset.id === "custom") {
 		const text = settings.text ?? "";
 		return { text, label: settings.label || (text ? keyLabel(text, 26) : "Set a prompt"), glyph: "✎" };
 	}
+
+
 
 	return { text: preset.text, label: settings.label || preset.label, glyph: preset.glyph };
 }

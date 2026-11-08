@@ -72,8 +72,12 @@ export abstract class DeckAction<T extends JsonObject = JsonObject> extends Sing
 	 * @param reason Short reason, a few words at most.
 	 */
 	protected async refuse(action: AnyAction<T>, reason: string): Promise<void> {
-		this.#notices.set(action.id, { text: reason, until: Date.now() + NOTICE_MS });
-		streamDeck.logger.info(`${this.manifestId} refused: ${reason}`);
+		// Before the hooks are installed every key is blocked for the same
+		// reason, and naming it beats nine different symptoms.
+		const text = runtime.settings.hooksInstalled ? reason : "Press Connect Claude Code first";
+
+		this.#notices.set(action.id, { text, until: Date.now() + NOTICE_MS });
+		streamDeck.logger.info(`${this.manifestId} refused: ${text}`);
 
 		await action.showAlert();
 		this.repaint();

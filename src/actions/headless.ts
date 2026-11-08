@@ -32,6 +32,9 @@ const runs = new Map<string, RunState>();
 /** How long a finished run stays on the key before it resets. */
 const RESULT_LINGER_MS = 20_000;
 
+/** What an unconfigured key runs; useful in any repository. */
+const DEFAULT_TASK = "Review the current git diff and list anything risky in a few bullets.";
+
 /**
  * Runs a one-shot Claude task with `claude -p`.
  *
@@ -45,7 +48,7 @@ export class HeadlessAction extends DeckAction<HeadlessSettings> {
 			return;
 		}
 
-		const label = settings.label || (settings.prompt ? keyLabel(settings.prompt, 26) : "Set a task");
+		const label = settings.label || keyLabel(settings.prompt || DEFAULT_TASK, 26);
 		const run = runs.get(key.id);
 
 		if (run && !run.done) {
@@ -80,7 +83,7 @@ export class HeadlessAction extends DeckAction<HeadlessSettings> {
 		await key.setState(0);
 		await key.setImage(
 			tile({
-				tone: settings.prompt ? "accent" : "offline",
+				tone: "accent",
 				eyebrow: "task",
 				glyph: "⚡",
 				title: label,
@@ -91,11 +94,6 @@ export class HeadlessAction extends DeckAction<HeadlessSettings> {
 
 	override async onKeyDown(ev: KeyDownEvent<HeadlessSettings>): Promise<void> {
 		const settings = ev.payload.settings;
-
-		if (!settings.prompt?.trim()) {
-			await this.refuse(ev.action, "Set a task first");
-			return;
-		}
 
 		if (runs.get(ev.action.id)?.done === undefined && runs.has(ev.action.id)) {
 			// Already running; a second press should not start a parallel run.
@@ -110,7 +108,7 @@ export class HeadlessAction extends DeckAction<HeadlessSettings> {
 		const location = await runtime.location(settings.runner, settings.distro);
 
 		const result = await runHeadless({
-			prompt: settings.prompt,
+			prompt: settings.prompt?.trim() || DEFAULT_TASK,
 			cwd: settings.cwd || runtime.settings.defaultCwd || undefined,
 			location,
 			helpers: await runtime.helperContext(),
