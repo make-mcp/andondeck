@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>Claude Deck</title>
+		<script src="./libs/sdpi-components.js"></script>
+		<style>
+			.hint { color: #948E86; font-size: 11px; line-height: 1.45; padding: 4px 0 8px; }
+			.hint code { color: #E8A33D; }
+		</style>
+	</head>
+	<body>
+		<sdpi-item label="Folder">
+			<sdpi-textfield setting="cwd" placeholder="/home/you/projects/acme-api"></sdpi-textfield>
+		</sdpi-item>
+		<sdpi-item label="Key label">
+			<sdpi-textfield setting="label" placeholder="Folder name"></sdpi-textfield>
+		</sdpi-item>
+		<sdpi-item label="Start">
+			<sdpi-checkbox setting="resume" label="Resume the last conversation there"></sdpi-checkbox>
+		</sdpi-item>
+		<sdpi-item label="Model">
+			<sdpi-select setting="model" default="">
+				<option value="">Default</option>
+				<option value="opus">Opus</option>
+				<option value="sonnet">Sonnet</option>
+				<option value="haiku">Haiku</option>
+			</sdpi-select>
+		</sdpi-item>
+		<sdpi-item label="Permissions">
+			<sdpi-select setting="permissionMode" default="">
+				<option value="">Claude Code default</option>
+				<option value="plan">Plan only</option>
+				<option value="acceptEdits">Accept edits</option>
+			</sdpi-select>
+		</sdpi-item>
+		<sdpi-item label="First message">
+			<sdpi-textarea setting="prompt" rows="3" placeholder="Optional — starts the session already working"></sdpi-textarea>
+		</sdpi-item>
+		<div class="hint">
+			Opens a real terminal window, so the session behaves exactly like one you started yourself. On Windows
+			the folder is the path <em>inside</em> WSL when Claude Code runs there.
+		</div>
+	</body>
+</html>

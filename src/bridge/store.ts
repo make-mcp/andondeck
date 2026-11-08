@@ -108,6 +108,18 @@ export class SessionStore extends EventEmitter {
 		return [...this.#sessions.values()].sort((a, b) => b.lastEventAt - a.lastEventAt);
 	}
 
+	/**
+	 * Sessions in a stable order, oldest first.
+	 *
+	 * {@link SessionStore.list} reorders constantly by activity, which is wrong
+	 * for keys that each own one session: a key must keep pointing at the same
+	 * project for as long as it lives.
+	 * @returns The sessions.
+	 */
+	public ordered(): SessionState[] {
+		return this.list().sort((a, b) => a.startedAt - b.startedAt);
+	}
+
 	public summaries(): SessionSummary[] {
 		return this.list().map((session) => ({
 			sessionId: session.sessionId,

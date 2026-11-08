@@ -16,30 +16,53 @@ export type AnyAction<T extends JsonObject> = KeyAction<T> | DialAction<T>;
 /** How long an explanation stays on the key after a press that did nothing. */
 const NOTICE_MS = 2500;
 
+/** Frame interval for keys whose border is animating. */
+const FRAME_MS = 125;
+
+/** Frames between full repaints of every key, animating or not. */
+const FULL_REPAINT_EVERY = 8;
+
 /** Every live action instance, so one ticker can repaint them all. */
 const live = new Set<DeckAction<never>>();
 
 let ticker: NodeJS.Timeout | undefined;
+let frame = 0;
 
-function repaintAll(): void {
-	for (const action of live) {
-		action.repaint();
-	}
+/** 0–1 position of the shared animation cycle, two seconds per loop. */
+let phase = 0;
+
+export function animationPhase(): number {
+	return phase;
 }
 
 /**
  * Starts the shared repaint loop.
  *
- * Keys show elapsed turn time and countdowns, so they need a steady tick rather
- * than only repainting when the bridge reports a change.
+ * Two rates, for a reason: everything needs a second-by-second repaint for
+ * elapsed times, but only keys whose border is moving need frames, and
+ * repainting a full XL at eight frames a second would flood the socket for no
+ * visible gain.
  */
 function ensureTicker(): void {
 	if (ticker) {
 		return;
 	}
 
-	runtime.on("change", repaintAll);
-	ticker = setInterval(repaintAll, 1000);
+	runtime.on("change", () => {
+		for (const action of live) {
+			action.repaint();
+		}
+	});
+
+	ticker = setInterval(() => {
+		frame += 1;
+		phase = (frame % (2000 / FRAME_MS)) / (2000 / FRAME_MS);
+
+		const everything = frame % FULL_REPAINT_EVERY === 0;
+		for (const action of live) {
+			action.repaint(everything ? "all" : "animating");
+		}
+	}, FRAME_MS);
 	ticker.unref?.();
 }
 
@@ -83,12 +106,30 @@ export abstract class DeckAction<T extends JsonObject = JsonObject> extends Sing
 		this.repaint();
 	}
 
-	/** Repaints every visible instance of this action. */
-	public repaint(): void {
+	/**
+	 * Whether this instance's border is moving and so needs frames.
+	 * @param _action The action instance.
+	 * @param _settings Its settings.
+	 * @returns `true` to repaint at frame rate.
+	 */
+	protected animates(_action: AnyAction<T>, _settings: T): boolean {
+		return false;
+	}
+
+	/**
+	 * Repaints visible instances of this action.
+	 * @param scope `all`, or only the instances that are animating.
+	 */
+	public repaint(scope: "all" | "animating" = "all"): void {
 		for (const action of this.actions) {
 			const typed = action as AnyAction<T>;
 
 			try {
+				const settings = this.settingsOf(typed);
+				if (scope === "animating" && !this.animates(typed, settings)) {
+					continue;
+				}
+
 				const notice = this.#notices.get(typed.id);
 				if (notice && Date.now() < notice.until) {
 					if (typed.isKey()) {
@@ -99,7 +140,7 @@ export abstract class DeckAction<T extends JsonObject = JsonObject> extends Sing
 					this.#notices.delete(typed.id);
 				}
 
-				void this.draw(typed, this.settingsOf(typed));
+				void this.draw(typed, settings);
 			} catch (error) {
 				streamDeck.logger.error(`draw failed for ${this.manifestId}: ${(error as Error).stack ?? String(error)}`);
 			}

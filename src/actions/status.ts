@@ -1,9 +1,9 @@
 import { action, type KeyDownEvent } from "@elgato/streamdeck";
 import type { JsonObject } from "@elgato/utils";
 
-import { DeckAction, type AnyAction, type SessionScoped } from "./base.js";
+import { DeckAction, animationPhase, type AnyAction, type SessionScoped } from "./base.js";
 import { runtime } from "../runtime.js";
-import { duration, tile, type TileTone } from "../ui/render.js";
+import { duration, tile, type EdgeMotion, type TileTone } from "../ui/render.js";
 import type { SessionState, SessionStatus } from "../bridge/types.js";
 
 type StatusSettings = SessionScoped & {
@@ -11,6 +11,8 @@ type StatusSettings = SessionScoped & {
 	showProject?: boolean;
 	/** Show the tool Claude is currently running. */
 	showTool?: boolean;
+	/** Show the session's permission mode across the top of the key. */
+	showPermissionMode?: boolean;
 } & JsonObject;
 
 const TONES: Record<SessionStatus, TileTone> = {
@@ -22,13 +24,24 @@ const TONES: Record<SessionStatus, TileTone> = {
 	ended: "offline",
 };
 
-const GLYPHS: Record<SessionStatus, string> = {
-	idle: "●",
-	working: "▶",
-	waiting: "?",
-	compacting: "⟳",
-	error: "!",
-	ended: "○",
+/** How the key's border behaves in each state. */
+const EDGES: Record<SessionStatus, EdgeMotion> = {
+	idle: "quiet",
+	working: "travel",
+	waiting: "pulse",
+	compacting: "drift",
+	error: "broken",
+	ended: "quiet",
+};
+
+/** Short labels for permission modes; `default` is the uninteresting one. */
+const MODES: Record<string, string | undefined> = {
+	default: undefined,
+	plan: "plan mode",
+	acceptEdits: "auto-edit",
+	auto: "auto",
+	dontAsk: "don't ask",
+	bypassPermissions: "bypass",
 };
 
 const WORDS: Record<SessionStatus, string> = {
@@ -40,6 +53,9 @@ const WORDS: Record<SessionStatus, string> = {
 	ended: "Ended",
 };
 
+/** Keys only need frames while their border is actually moving. */
+const MOVING: SessionStatus[] = ["working", "waiting", "compacting"];
+
 /**
  * Live state of a Claude Code session.
  *
@@ -48,6 +64,11 @@ const WORDS: Record<SessionStatus, string> = {
  */
 @action({ UUID: "io.github.claude-deck.plugin.status" })
 export class StatusAction extends DeckAction<StatusSettings> {
+	protected override animates(_key: AnyAction<StatusSettings>, settings: StatusSettings): boolean {
+		const session = runtime.store.resolve(settings.session);
+		return session !== undefined && MOVING.includes(session.status);
+	}
+
 	protected override async draw(key: AnyAction<StatusSettings>, settings: StatusSettings): Promise<void> {
 		if (!key.isKey()) {
 			return;
@@ -55,7 +76,12 @@ export class StatusAction extends DeckAction<StatusSettings> {
 
 		if (!runtime.bridge.listening) {
 			await key.setImage(
-				tile({ tone: "error", glyph: "!", title: "Bridge down", subtitle: runtime.bridge.lastError ? "Check port" : "Starting…" }),
+				tile({
+					tone: "error",
+					edge: "broken",
+					headline: "Bridge down",
+					subtitle: runtime.bridge.lastError ? "Check the port" : "Starting",
+				}),
 			);
 			return;
 		}
@@ -65,9 +91,8 @@ export class StatusAction extends DeckAction<StatusSettings> {
 			await key.setImage(
 				tile({
 					tone: "offline",
-					glyph: "○",
-					title: "No session",
-					subtitle: runtime.settings.hooksInstalled ? "Start Claude Code" : "Not connected",
+					headline: "No session",
+					subtitle: runtime.settings.hooksInstalled ? "Start Claude Code" : "Not connected yet",
 				}),
 			);
 			return;
@@ -76,27 +101,35 @@ export class StatusAction extends DeckAction<StatusSettings> {
 		await key.setImage(tile(this.#describe(session, settings)));
 	}
 
-	/** Chooses glyph, title and subtitle for the session's current state. */
+	/**
+	 * Chooses what the key says about a session.
+	 *
+	 * The project name gets the headline because that is what tells two keys
+	 * apart; the state is already being spoken by the border.
+	 * @param session The session.
+	 * @param settings The key's settings.
+	 * @returns Tile options.
+	 */
 	#describe(session: SessionState, settings: StatusSettings) {
 		const elapsed = session.turnStartedAt ? Date.now() - session.turnStartedAt : 0;
+		const mode = settings.showPermissionMode === false ? undefined : MODES[session.permissionMode ?? "default"];
 
 		const subtitle =
 			session.status === "waiting" && session.pending
 				? session.pending.summary
 				: session.status === "error"
-					? (session.lastError ?? "")
+					? (session.lastError ?? WORDS.error)
 					: session.status === "working"
-						? [settings.showTool !== false ? session.currentTool : undefined, elapsed ? duration(elapsed) : undefined]
-								.filter(Boolean)
-								.join(" · ")
-						: session.project;
+						? (settings.showTool === false ? undefined : session.currentTool) ?? WORDS.working
+						: WORDS[session.status];
 
 		return {
 			tone: TONES[session.status],
-			glyph: GLYPHS[session.status],
-			title: settings.showProject ? session.project : WORDS[session.status],
+			edge: EDGES[session.status],
+			phase: animationPhase(),
+			eyebrow: mode ?? (session.status === "working" && elapsed ? duration(elapsed) : undefined),
+			headline: settings.showProject === false ? WORDS[session.status] : session.project,
 			subtitle,
-			eyebrow: settings.showProject ? WORDS[session.status] : undefined,
 			badge: session.queue.length > 0 ? session.queue.length : undefined,
 			progress:
 				session.status === "waiting" && session.pending

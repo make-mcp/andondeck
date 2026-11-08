@@ -286,6 +286,41 @@
 			]
 		},
 		{
+			"UUID": "io.github.claude-deck.plugin.slot",
+			"Name": "Session Slot",
+			"Tooltip": "Gives one Claude Code session a key of its own, held for the session's whole life.",
+			"Icon": "imgs/actions/slot/icon",
+			"Controllers": [
+				"Keypad"
+			],
+			"PropertyInspectorPath": "ui/slot.html",
+			"UserTitleEnabled": false,
+			"States": [
+				{
+					"Image": "imgs/actions/slot/key",
+					"TitleAlignment": "bottom",
+					"FontSize": 10
+				}
+			]
+		},
+		{
+			"UUID": "io.github.claude-deck.plugin.launch",
+			"Name": "Launch Claude",
+			"Tooltip": "Opens a terminal with an interactive Claude Code session in a folder you choose.",
+			"Icon": "imgs/actions/launch/icon",
+			"Controllers": [
+				"Keypad"
+			],
+			"PropertyInspectorPath": "ui/launch.html",
+			"States": [
+				{
+					"Image": "imgs/actions/launch/key",
+					"TitleAlignment": "bottom",
+					"FontSize": 10
+				}
+			]
+		},
+		{
 			"UUID": "io.github.claude-deck.plugin.setup",
 			"Name": "Connect Claude Code",
 			"Tooltip": "One-time setup: installs the Claude Deck hooks into your Claude Code settings and shows bridge health.",

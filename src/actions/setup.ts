@@ -53,17 +53,30 @@ export class SetupAction extends DeckAction<SetupSettings> {
 				glyph: connected ? "✓" : "⚯",
 				title: connected ? "Connected" : "Connect",
 				subtitle: connected ? `${sessions} session${sessions === 1 ? "" : "s"}` : "Press to install hooks",
+				badge: connected && sessions === 0 ? "?" : undefined,
 			}),
 		);
 	}
 
+	/**
+	 * Connects, or re-checks an existing connection.
+	 *
+	 * Deliberately not a toggle: pressing a key labelled "Connected" to see what
+	 * it does should not silently disconnect you. Removing the hooks lives in
+	 * this action's settings, where it cannot happen by accident.
+	 */
 	override async onKeyDown(ev: KeyDownEvent<SetupSettings>): Promise<void> {
 		try {
-			const path = runtime.settings.hooksInstalled ? await runtime.disconnect() : await runtime.connect();
-			streamDeck.logger.info(`hooks written to ${path}`);
+			if (runtime.settings.hooksInstalled) {
+				const moved = await runtime.reconcile();
+				streamDeck.logger.info(moved ? `hooks re-pointed at ${moved}` : "hooks already up to date");
+			} else {
+				streamDeck.logger.info(`hooks written to ${await runtime.connect()}`);
+			}
+
 			await ev.action.showOk();
 		} catch (error) {
-			streamDeck.logger.error(`setup failed: ${(error as Error).message}`);
+			streamDeck.logger.error(`setup failed: ${(error as Error).stack ?? String(error)}`);
 			await ev.action.showAlert();
 		}
 

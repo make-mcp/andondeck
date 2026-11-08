@@ -13,9 +13,9 @@ import sharp from "sharp";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const out = join(root, "io.github.claude-deck.plugin.sdPlugin", "imgs");
 
-const ACCENT = "#d97757";
-const INK = "#f5f3ef";
-const BACKDROP = "#17171a";
+const ACCENT = "#B9B2A8";
+const INK = "#F2EFEA";
+const BACKDROP = "#201E1C";
 
 const FONT = "'Segoe UI','DejaVu Sans',sans-serif";
 
@@ -85,8 +85,8 @@ const ACTIONS = [
 		dir: "approve",
 		glyph: "✓",
 		states: [
-			{ name: "allow", glyph: "✓", title: "Allow", tone: "#5a9e78" },
-			{ name: "deny", glyph: "✕", title: "Deny", tone: "#d4604f" },
+			{ name: "allow", glyph: "✓", title: "Allow", tone: "#4C9A6A" },
+			{ name: "deny", glyph: "✕", title: "Deny", tone: "#D1483F" },
 		],
 	},
 	{ dir: "prompt", glyph: "✎", states: [{ name: "key", glyph: "✎", title: "Prompt" }] },
@@ -96,7 +96,7 @@ const ACTIONS = [
 		glyph: "⚡",
 		states: [
 			{ name: "key", glyph: "⚡", title: "Task" },
-			{ name: "running", glyph: "▶", title: "Running", tone: "#d9a157" },
+			{ name: "running", glyph: "▶", title: "Running", tone: "#E8A33D" },
 		],
 	},
 	{ dir: "usage", glyph: "◷", states: [{ name: "key", glyph: "◷", title: "Usage" }] },
@@ -104,25 +104,27 @@ const ACTIONS = [
 		dir: "autopilot",
 		glyph: "◎",
 		states: [
-			{ name: "off", glyph: "◎", title: "Autopilot", tone: "#4a4a4d" },
-			{ name: "on", glyph: "◉", title: "Armed", tone: "#d9a157" },
+			{ name: "off", glyph: "◎", title: "Autopilot", tone: "#46423E" },
+			{ name: "on", glyph: "◉", title: "Armed", tone: "#E8A33D" },
 		],
 	},
 	{
 		dir: "halt",
 		glyph: "■",
 		states: [
-			{ name: "key", glyph: "■", title: "Stop", tone: "#d4604f" },
-			{ name: "stopped", glyph: "■", title: "Stopped", tone: "#d4604f" },
+			{ name: "key", glyph: "■", title: "Stop", tone: "#D1483F" },
+			{ name: "stopped", glyph: "■", title: "Stopped", tone: "#D1483F" },
 		],
 	},
 	{ dir: "model", glyph: "◆", states: [{ name: "key", glyph: "◆", title: "Model" }] },
+	{ dir: "slot", glyph: "▦", states: [{ name: "key", glyph: "▦", title: "Session" }] },
+	{ dir: "launch", glyph: "▸", states: [{ name: "key", glyph: "▸", title: "Launch" }] },
 	{
 		dir: "setup",
 		glyph: "⚯",
 		states: [
-			{ name: "disconnected", glyph: "⚯", title: "Connect", tone: "#4a4a4d" },
-			{ name: "connected", glyph: "✓", title: "Connected", tone: "#5a9e78" },
+			{ name: "disconnected", glyph: "⚯", title: "Connect", tone: "#46423E" },
+			{ name: "connected", glyph: "✓", title: "Connected", tone: "#4C9A6A" },
 		],
 	},
 ];

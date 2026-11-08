@@ -44,6 +44,8 @@ is configured with `onFailure: "continue"` — Claude Code behaves exactly as if
 | **Prompt / Slash Command** | One-tap prompts and slash commands — `/compact`, `/review`, or anything you write. |
 | **Session Switcher** | Pin which session the deck controls, or cycle through everything that is open. |
 | **Run Task** | A one-shot `claude -p` run in the background. Never touches your open session. |
+| **Session Slot** | Gives one session a key of its own, held for that session's whole life. A row of them is a board of everything running. |
+| **Launch Claude** | Opens a terminal with an interactive session in a folder you choose. |
 | **Usage & Timer** | Turn timer, tool calls, token counts and context pressure. |
 | **Autopilot** | Approves tool calls for a set stretch of time, then switches itself back off. |
 | **Stop Claude** | Emergency brake: blocks every further tool call so Claude winds down and reports back. |
@@ -65,9 +67,37 @@ releases itself once the turn ends.
 
 ## Ready-made profiles
 
-The plugin ships a layout for every supported device, designed for its grid rather than cropped from a
-bigger one — Stream Deck, Mini, XL, + (with the dials wired to the queue, session and usage) and Neo.
-Pick one under **Profiles → +** in the Stream Deck app; nothing is installed or switched automatically.
+Every supported device gets a layout built for its grid rather than cropped from a bigger one — Stream
+Deck, Mini, XL, + (dials wired to the queue, session and usage) and Neo. Pick one under **Profiles → +**
+in the Stream Deck app; nothing is installed or switched automatically.
+
+Rows are tasks, not categories, because that is how a deck is actually used. On the XL:
+
+```
+Watch     session 1   session 2   session 3   session 4   timer   context   tokens   tools
+Answer    allow       deny        stop        autopilot   all     model     session  status
+Queue     run tests   review      commit      docs        paste   promote   drop     clear
+Start     project 1   project 2   review diff today       compact continue  ·        connect
+```
+
+Reading along a row is how you work; reading down a column means nothing, so nothing is arranged that way.
+
+## How a key looks
+
+State lives on the key's border, information lives in the middle. A Stream Deck key is a 19mm square read
+from the corner of your eye, so the state has to carry at a distance and the text is for when you actually
+look:
+
+| Border | Means |
+| --- | --- |
+| A light running the edge, green | Claude is working |
+| The whole edge breathing, amber | Claude is waiting on you |
+| A ring with a piece missing, red | The turn failed |
+| Dashes drifting, blue | Compacting |
+| Thin and still, grey | Idle |
+
+Colour is reserved for machine state. Keys you press are graphite, so a lit key in a row always means
+Claude is telling you something rather than Stream Deck decorating a button.
 
 ## Install
 

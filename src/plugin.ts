@@ -4,12 +4,14 @@ import type { JsonValue } from "@elgato/utils";
 import { ApproveAction } from "./actions/approve.js";
 import { AutopilotAction } from "./actions/autopilot.js";
 import { HaltAction } from "./actions/halt.js";
+import { LaunchAction } from "./actions/launch.js";
 import { ModelAction } from "./actions/model.js";
 import { HeadlessAction } from "./actions/headless.js";
 import { PromptAction, PRESETS } from "./actions/prompt.js";
 import { QueueControlAction } from "./actions/queue-control.js";
 import { QueuePromptAction } from "./actions/queue.js";
 import { SessionAction } from "./actions/session.js";
+import { SlotAction } from "./actions/slot.js";
 import { SetupAction } from "./actions/setup.js";
 import { StatusAction } from "./actions/status.js";
 import { UsageAction } from "./actions/usage.js";
@@ -44,6 +46,8 @@ streamDeck.actions.registerAction(new UsageAction());
 streamDeck.actions.registerAction(new AutopilotAction());
 streamDeck.actions.registerAction(new HaltAction());
 streamDeck.actions.registerAction(new ModelAction());
+streamDeck.actions.registerAction(new SlotAction());
+streamDeck.actions.registerAction(new LaunchAction());
 streamDeck.actions.registerAction(new SetupAction());
 
 /**

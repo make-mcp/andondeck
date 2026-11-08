@@ -35,25 +35,28 @@ export class AutopilotAction extends DeckAction<AutopilotSettings> {
 			await key.setState(0);
 			await key.setImage(
 				tile({
-					tone: "offline",
-					eyebrow: "autopilot",
+					tone: "accent",
+					eyebrow: "Autopilot",
 					glyph: "◎",
 					title: "Off",
-					subtitle: scope === "all" ? "arms: everything" : "arms: read-only",
+					subtitle: scope === "all" ? "Arms everything" : "Arms read-only",
 				}),
 			);
 			return;
 		}
 
+		// Armed is a mode, not a machine state, so it inverts rather than
+		// borrowing the amber that means Claude is waiting on you. Approving
+		// everything additionally carries a full red ring.
 		await key.setState(1);
 		await key.setImage(
 			tile({
-				tone: active.mode === "all" ? "error" : "working",
+				tone: active.mode === "all" ? "error" : "accent",
 				solid: true,
-				eyebrow: "autopilot",
+				eyebrow: "Autopilot",
 				glyph: "◉",
 				title: active.mode === "all" ? "All tools" : "Read-only",
-				subtitle: active.until ? duration(remaining) : "until pressed",
+				subtitle: active.until ? duration(remaining) : "Until pressed",
 				progress: active.until && settings.minutes ? remaining / (settings.minutes * 60_000) : undefined,
 			}),
 		);
