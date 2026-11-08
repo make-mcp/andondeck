@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>Claude Deck</title>
+		<script src="./libs/sdpi-components.js"></script>
+		<style>
+			.hint { color: #9d9a94; font-size: 11px; line-height: 1.45; padding: 4px 0 8px; }
+			.hint code { color: #d97757; }
+			.warn { color: #d9a157; }
+		</style>
+	</head>
+	<body>
+		<sdpi-item label="Approve">
+			<sdpi-select setting="scope" default="safe">
+				<option value="safe">Read-only tools</option>
+				<option value="all">Everything</option>
+			</sdpi-select>
+		</sdpi-item>
+		<sdpi-item label="For">
+			<sdpi-range setting="minutes" default="15" min="0" max="120" step="5" showlabels></sdpi-range>
+		</sdpi-item>
+		<div class="hint">
+			Zero minutes means it stays armed until you press the key again. The key shows the countdown while it
+			is running, and a second press switches it off at any time.
+		</div>
+		<div class="hint warn">
+			<strong>Everything</strong> waves through file writes and shell commands without asking. Use a short
+			window, and keep the key where you can see it.
+		</div>
+	</body>
+</html>

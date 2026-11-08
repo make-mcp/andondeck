@@ -35,6 +35,8 @@ export type GlobalSettings = {
 	approvalTimeoutSec: number;
 	/** Let the deck wake an idle session with a queued prompt. */
 	idleWake: boolean;
+	/** Ask the terminal to raise a notification when Claude needs attention. */
+	notifyTerminal: boolean;
 	hooksInstalled: boolean;
 	runner: Runner;
 	distro: string;
@@ -51,6 +53,7 @@ const DEFAULTS: GlobalSettings = {
 	deckApprovals: true,
 	approvalTimeoutSec: 45,
 	idleWake: true,
+	notifyTerminal: true,
 	hooksInstalled: false,
 	runner: "auto",
 	distro: "",
@@ -117,6 +120,7 @@ class Runtime extends EventEmitter<RuntimeEvents> {
 			token: this.#settings.token,
 			deckApprovals: false,
 			approvalTimeoutMs: this.#settings.approvalTimeoutSec * 1000,
+			notifyTerminal: this.#settings.notifyTerminal,
 		});
 
 		bridge.on("change", () => this.emit("change"));
@@ -190,6 +194,7 @@ class Runtime extends EventEmitter<RuntimeEvents> {
 				token: this.#settings.token,
 				deckApprovals: this.#approvers.size > 0 && this.#settings.deckApprovals,
 				approvalTimeoutMs: Number(this.#settings.approvalTimeoutSec || 45) * 1000,
+				notifyTerminal: this.#settings.notifyTerminal,
 			});
 		}
 
@@ -208,6 +213,7 @@ class Runtime extends EventEmitter<RuntimeEvents> {
 				token: this.#settings.token,
 				deckApprovals: this.#approvers.size > 0 && this.#settings.deckApprovals,
 				approvalTimeoutMs: this.#settings.approvalTimeoutSec * 1000,
+				notifyTerminal: this.#settings.notifyTerminal,
 			});
 		}
 

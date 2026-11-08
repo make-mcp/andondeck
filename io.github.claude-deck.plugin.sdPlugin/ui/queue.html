@@ -10,6 +10,15 @@
 		</style>
 	</head>
 	<body>
+		<sdpi-item label="Prompt from">
+			<sdpi-select setting="source" default="text">
+				<option value="text">The text below</option>
+				<option value="clipboard">The system clipboard</option>
+			</sdpi-select>
+		</sdpi-item>
+		<sdpi-item label="Clipboard wrapper">
+			<sdpi-textfield setting="template" placeholder="Fix this error: {}"></sdpi-textfield>
+		</sdpi-item>
 		<sdpi-item label="Prompt">
 			<sdpi-textarea setting="text" rows="5" placeholder="What should Claude do next?" showlength maxlength="2000"></sdpi-textarea>
 		</sdpi-item>
@@ -22,6 +31,7 @@
 		<sdpi-item label="Duplicates">
 			<sdpi-checkbox setting="allowDuplicates" label="Allow queueing the same prompt twice"></sdpi-checkbox>
 		</sdpi-item>
+		<div class="hint">Clipboard mode queues whatever you last copied — handy for pasting an error straight at Claude. Use <code>{}</code> in the wrapper to mark where it goes.</div>
 		<div class="hint">While Claude is working the prompt is handed over the moment the turn ends. If the session is already idle, the idle-wake helper delivers it — enable that in <strong>Connect Claude Code</strong>.</div>
 	</body>
 </html>

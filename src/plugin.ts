@@ -2,6 +2,9 @@ import streamDeck from "@elgato/streamdeck";
 import type { JsonValue } from "@elgato/utils";
 
 import { ApproveAction } from "./actions/approve.js";
+import { AutopilotAction } from "./actions/autopilot.js";
+import { HaltAction } from "./actions/halt.js";
+import { ModelAction } from "./actions/model.js";
 import { HeadlessAction } from "./actions/headless.js";
 import { PromptAction, PRESETS } from "./actions/prompt.js";
 import { QueueControlAction } from "./actions/queue-control.js";
@@ -20,6 +23,9 @@ streamDeck.actions.registerAction(new PromptAction());
 streamDeck.actions.registerAction(new SessionAction());
 streamDeck.actions.registerAction(new HeadlessAction());
 streamDeck.actions.registerAction(new UsageAction());
+streamDeck.actions.registerAction(new AutopilotAction());
+streamDeck.actions.registerAction(new HaltAction());
+streamDeck.actions.registerAction(new ModelAction());
 streamDeck.actions.registerAction(new SetupAction());
 
 /**

@@ -69,6 +69,7 @@ export class SessionStore extends EventEmitter {
 				startedAt: Date.now(),
 				subagents: 0,
 				queue: this.#orphanQueue.splice(0, this.#orphanQueue.length),
+				haltedCalls: 0,
 				usage: emptyUsage(),
 			};
 			this.#sessions.set(sessionId, session);

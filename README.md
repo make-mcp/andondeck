@@ -38,14 +38,30 @@ is configured with `onFailure: "continue"` — Claude Code behaves exactly as if
 | Action | What it does |
 | --- | --- |
 | **Claude Status** | Live state: idle, working, waiting on you, compacting, failed. Shows the current tool, elapsed turn time and the queue count. Press to follow whichever session needs attention. |
-| **Queue Prompt** | Stores a prompt locally and hands it over the moment the current turn ends. |
+| **Queue Prompt** | Stores a prompt locally and hands it over the moment the current turn ends. Can queue whatever you last copied, so an error message goes from clipboard to Claude in one press. |
 | **Queue Control** | Browse, promote, drop or clear queued prompts. On a Stream Deck +, rotate to scroll. |
 | **Approve / Deny** | Answers Claude Code permission requests from the deck, with an optional confirm-twice guard. |
 | **Prompt / Slash Command** | One-tap prompts and slash commands — `/compact`, `/review`, or anything you write. |
 | **Session Switcher** | Pin which session the deck controls, or cycle through everything that is open. |
 | **Run Task** | A one-shot `claude -p` run in the background. Never touches your open session. |
 | **Usage & Timer** | Turn timer, tool calls, token counts and context pressure. |
+| **Autopilot** | Approves tool calls for a set stretch of time, then switches itself back off. |
+| **Stop Claude** | Emergency brake: blocks every further tool call so Claude winds down and reports back. |
+| **Model** | Shows the session's model and switches it at the next turn boundary. |
 | **Connect Claude Code** | One-time setup. Installs the hooks, shows bridge health and every setting. |
+
+## Autopilot and the brake
+
+Two things only the hook bridge can do.
+
+**Autopilot** answers `PreToolUse` with `allow` for a window you choose — read-only tools, or everything.
+It differs from a permission mode in the ways that matter when you are not watching: it is armed from a
+key, the key shows what is armed and counts the window down, and one press turns it off.
+
+**Stop Claude** is the brake. No hook can interrupt a turn already in flight, but `PreToolUse` can deny
+everything that comes next, which stops the agent touching anything further and makes it wind down and
+report where it got to. The brake outranks autopilot — arming one cannot defeat the other — and it
+releases itself once the turn ends.
 
 ## Ready-made profiles
 
@@ -127,6 +143,9 @@ handles both:
 Every request carries a random per-installation token; requests without it are rejected with 401.
 
 On macOS none of this applies — Claude Code is reached natively on loopback.
+
+Terminal notifications are opt-out: when Claude needs permission or a turn fails, the hook response asks
+your terminal to raise a notification (OSC 9), which Windows Terminal, iTerm2, ConEmu and others honour.
 
 ## Privacy
 

@@ -101,6 +101,23 @@ const ACTIONS = [
 	},
 	{ dir: "usage", glyph: "◷", states: [{ name: "key", glyph: "◷", title: "Usage" }] },
 	{
+		dir: "autopilot",
+		glyph: "◎",
+		states: [
+			{ name: "off", glyph: "◎", title: "Autopilot", tone: "#4a4a4d" },
+			{ name: "on", glyph: "◉", title: "Armed", tone: "#d9a157" },
+		],
+	},
+	{
+		dir: "halt",
+		glyph: "■",
+		states: [
+			{ name: "key", glyph: "■", title: "Stop", tone: "#d4604f" },
+			{ name: "stopped", glyph: "■", title: "Stopped", tone: "#d4604f" },
+		],
+	},
+	{ dir: "model", glyph: "◆", states: [{ name: "key", glyph: "◆", title: "Model" }] },
+	{
 		dir: "setup",
 		glyph: "⚯",
 		states: [

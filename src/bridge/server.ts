@@ -4,7 +4,8 @@ import { EventEmitter } from "node:events";
 import { SessionStore } from "./store.js";
 import { summarizeTool } from "./summarize.js";
 import { readTranscriptUsage } from "../claude/transcript.js";
-import type { HookInput, HookOutput, PendingPermission, SessionState } from "./types.js";
+import { READ_ONLY_TOOLS } from "./types.js";
+import type { AutoApprove, AutoApproveMode, HookInput, HookOutput, PendingPermission, SessionState } from "./types.js";
 
 /** Largest hook payload the bridge will read, to keep a runaway transcript from eating memory. */
 const MAX_BODY_BYTES = 4 * 1024 * 1024;
@@ -17,7 +18,18 @@ export type BridgeOptions = {
 	/** Hold permission requests open so they can be answered from the deck. */
 	deckApprovals: boolean;
 	approvalTimeoutMs: number;
+	/** Ask the terminal to raise a notification when Claude needs attention. */
+	notifyTerminal: boolean;
 };
+
+/**
+ * Terminal notification escape, understood by Windows Terminal, iTerm2, ConEmu
+ * and others. Claude Code only forwards a small allow-list of sequences, and
+ * OSC 9 is on it.
+ */
+function terminalNotice(message: string): string {
+	return `\u001b]9;${message.replace(/[\u0000-\u001f]/g, " ").slice(0, 120)}\u0007`;
+}
 
 type PendingResolver = {
 	resolve: (output: HookOutput) => void;
@@ -63,6 +75,8 @@ export class Bridge extends EventEmitter<BridgeEvents> {
 
 	/** Parked idle-wake long-polls, at most one per session. */
 	readonly #idleWaiters = new Map<string, IdleWaiter>();
+
+	#autoApprove: AutoApprove = { mode: "off", until: 0 };
 
 	public constructor(options: BridgeOptions) {
 		super();
@@ -176,6 +190,61 @@ export class Bridge extends EventEmitter<BridgeEvents> {
 		}
 	}
 
+	/** How much the deck is approving on the user's behalf right now. */
+	public get autoApprove(): AutoApprove {
+		if (this.#autoApprove.mode !== "off" && this.#autoApprove.until > 0 && Date.now() > this.#autoApprove.until) {
+			this.#autoApprove = { mode: "off", until: 0 };
+			this.emit("change");
+		}
+
+		return this.#autoApprove;
+	}
+
+	/**
+	 * Arms or disarms auto-approval.
+	 *
+	 * Always time-limited, and surfaced on the key that armed it, so it cannot
+	 * be left on by accident the way a permission mode can.
+	 * @param mode What to approve.
+	 * @param durationMs How long it stays armed; 0 means until it is turned off.
+	 */
+	public setAutoApprove(mode: AutoApproveMode, durationMs: number): void {
+		this.#autoApprove = { mode, until: mode === "off" || durationMs <= 0 ? 0 : Date.now() + durationMs };
+		this.emit("log", `auto-approve ${mode}${this.#autoApprove.until ? ` for ${Math.round(durationMs / 1000)}s` : ""}`);
+		this.emit("change");
+	}
+
+	/** Whether a tool call falls within the armed auto-approval. */
+	#shouldAutoApprove(toolName: string): boolean {
+		const { mode } = this.autoApprove;
+		if (mode === "all") {
+			return true;
+		}
+
+		return mode === "safe" && (READ_ONLY_TOOLS as readonly string[]).includes(toolName);
+	}
+
+	/**
+	 * Pulls the emergency brake on a session.
+	 *
+	 * There is no hook that interrupts a turn in flight, but denying every tool
+	 * call stops the agent from doing anything further and makes it wind down,
+	 * which is the closest thing to an abort the deck can offer.
+	 * @param session Session to halt.
+	 */
+	public halt(session: SessionState): void {
+		session.haltedAt = Date.now();
+		session.haltedCalls = 0;
+		this.emit("log", `halt armed for ${session.project}`);
+		this.store.touch();
+	}
+
+	public resume(session: SessionState): void {
+		session.haltedAt = undefined;
+		session.haltedCalls = 0;
+		this.store.touch();
+	}
+
 	/** Answers an open permission request. */
 	public decide(toolUseId: string, behavior: "allow" | "deny", reason?: string): boolean {
 		const waiter = this.#awaiting.get(toolUseId);
@@ -286,7 +355,32 @@ export class Bridge extends EventEmitter<BridgeEvents> {
 
 			case "PreToolUse": {
 				session.status = "working";
-				session.currentTool = typeof input.tool_name === "string" ? input.tool_name : undefined;
+				const toolName = typeof input.tool_name === "string" ? input.tool_name : "";
+				session.currentTool = toolName || undefined;
+
+				if (session.haltedAt) {
+					session.haltedCalls += 1;
+					this.emit("change");
+					return {
+						hookSpecificOutput: {
+							hookEventName: "PreToolUse",
+							permissionDecision: "deny",
+							permissionDecisionReason:
+								"Stopped from the Stream Deck. Do not run further tools; summarise where you got to and wait.",
+						},
+					};
+				}
+
+				if (this.#shouldAutoApprove(toolName)) {
+					this.emit("change");
+					return {
+						hookSpecificOutput: {
+							hookEventName: "PreToolUse",
+							permissionDecision: "allow",
+							permissionDecisionReason: "Auto-approved from the Stream Deck",
+						},
+					};
+				}
 				break;
 			}
 
@@ -344,7 +438,10 @@ export class Bridge extends EventEmitter<BridgeEvents> {
 				session.lastError = typeof input.error_message === "string" ? input.error_message : String(input.error_type ?? "error");
 				session.turnStartedAt = undefined;
 				this.emit("notify", { title: "Claude failed", body: session.lastError, session });
-				break;
+				this.emit("change");
+				return this.#options.notifyTerminal
+					? { terminalSequence: terminalNotice(`Claude failed: ${session.lastError}`) }
+					: {};
 			}
 
 			case "SessionEnd": {
@@ -367,6 +464,16 @@ export class Bridge extends EventEmitter<BridgeEvents> {
 		const toolName = String(input.tool_name ?? "tool");
 		const toolInput = (input.tool_input ?? {}) as Record<string, unknown>;
 
+		// MCP tools and anything PreToolUse did not cover still land here.
+		if (this.#shouldAutoApprove(toolName)) {
+			return {
+				hookSpecificOutput: {
+					hookEventName: "PermissionRequest",
+					decision: { behavior: "allow" },
+				},
+			};
+		}
+
 		const pending: PendingPermission = {
 			toolUseId,
 			toolName,
@@ -384,7 +491,7 @@ export class Bridge extends EventEmitter<BridgeEvents> {
 		if (!this.#options.deckApprovals) {
 			// Observe only: Claude Code shows its own prompt in the terminal.
 			this.emit("change");
-			return {};
+			return this.#options.notifyTerminal ? { terminalSequence: terminalNotice(`Claude needs permission: ${pending.summary}`) } : {};
 		}
 
 		return new Promise<HookOutput>((resolve) => {
@@ -427,6 +534,11 @@ export class Bridge extends EventEmitter<BridgeEvents> {
 		session.lastAssistantMessage = typeof input.last_assistant_message === "string" ? input.last_assistant_message : undefined;
 		session.currentTool = undefined;
 		session.usage.turns += 1;
+
+		// The brake is per-turn: once Claude has wound down, let it work again.
+		if (session.haltedAt) {
+			this.resume(session);
+		}
 
 		if (session.turnStartedAt) {
 			session.usage.busyMs += Date.now() - session.turnStartedAt;

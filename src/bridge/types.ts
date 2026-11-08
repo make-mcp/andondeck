@@ -30,6 +30,8 @@ export type HookOutput = {
 	continue?: boolean;
 	stopReason?: string;
 	systemMessage?: string;
+	/** OSC/BEL escape asking the terminal to raise a notification. */
+	terminalSequence?: string;
 	hookSpecificOutput?: Record<string, unknown>;
 };
 
@@ -67,6 +69,28 @@ export type SessionUsage = {
 	costUsd: number;
 };
 
+/** Tools that only read; safe to wave through when auto-approve is limited. */
+export const READ_ONLY_TOOLS = [
+	"Read",
+	"Grep",
+	"Glob",
+	"NotebookRead",
+	"WebSearch",
+	"WebFetch",
+	"TodoWrite",
+	"TaskOutput",
+	"ListAgents",
+] as const;
+
+/** How much the deck is currently approving on the user's behalf. */
+export type AutoApproveMode = "off" | "safe" | "all";
+
+export type AutoApprove = {
+	mode: AutoApproveMode;
+	/** Epoch milliseconds after which it reverts to `off`; 0 means no expiry. */
+	until: number;
+};
+
 export type SessionState = {
 	sessionId: string;
 	cwd: string;
@@ -88,6 +112,10 @@ export type SessionState = {
 	wslDistro?: string;
 	queue: QueueItem[];
 	pending?: PendingPermission;
+	/** Set while the user has pulled the emergency brake on this session. */
+	haltedAt?: number;
+	/** Tool calls denied since the brake was pulled. */
+	haltedCalls: number;
 	usage: SessionUsage;
 };
 

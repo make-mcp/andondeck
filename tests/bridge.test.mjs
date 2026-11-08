@@ -24,7 +24,14 @@ describe("bridge", () => {
 
 	before(async () => {
 		// Port 0 lets the OS pick a free one, so the suite never collides with a running plugin.
-		bridge = new Bridge({ port: 0, exposeToWsl: false, token: TOKEN, deckApprovals: true, approvalTimeoutMs: 2000 });
+		bridge = new Bridge({
+			port: 0,
+			exposeToWsl: false,
+			token: TOKEN,
+			deckApprovals: true,
+			approvalTimeoutMs: 2000,
+			notifyTerminal: false,
+		});
 		await bridge.start();
 		port = bridge.address.port;
 	});
@@ -128,5 +135,99 @@ describe("bridge", () => {
 	it("drops the session when it ends", async () => {
 		await hook(port, { hook_event_name: "SessionEnd", reason: "clear" });
 		assert.equal(bridge.store.list().length, 0);
+	});
+});
+
+describe("autopilot and the brake", () => {
+	let bridge;
+	let port;
+	const SID = "autopilot-session";
+
+	const post = async (body) => {
+		const response = await fetch(`http://127.0.0.1:${port}/hook`, {
+			method: "POST",
+			headers: { "content-type": "application/json", "x-claude-deck-token": TOKEN },
+			body: JSON.stringify({ session_id: SID, cwd: "/home/dev/widget", ...body }),
+		});
+		return response.json();
+	};
+
+	const preToolUse = (tool_name, tool_input = {}) =>
+		post({ hook_event_name: "PreToolUse", tool_name, tool_input, tool_use_id: `t${Math.random()}` });
+
+	before(async () => {
+		bridge = new Bridge({
+			port: 0,
+			exposeToWsl: false,
+			token: TOKEN,
+			deckApprovals: true,
+			approvalTimeoutMs: 1000,
+			notifyTerminal: false,
+		});
+		await bridge.start();
+		port = bridge.address.port;
+		await post({ hook_event_name: "SessionStart", source: "startup" });
+	});
+
+	after(async () => {
+		await bridge.stop();
+	});
+
+	it("decides nothing while disarmed", async () => {
+		assert.deepEqual(await preToolUse("Read", { file_path: "/x" }), {});
+		assert.deepEqual(await preToolUse("Bash", { command: "rm -rf /" }), {});
+	});
+
+	it("waves through only read-only tools on the safe setting", async () => {
+		bridge.setAutoApprove("safe", 60_000);
+
+		const read = await preToolUse("Read", { file_path: "/x" });
+		assert.equal(read.hookSpecificOutput.permissionDecision, "allow");
+
+		const bash = await preToolUse("Bash", { command: "npm test" });
+		assert.deepEqual(bash, {}, "a shell command is not read-only");
+	});
+
+	it("waves through everything when armed for all tools", async () => {
+		bridge.setAutoApprove("all", 60_000);
+
+		const bash = await preToolUse("Bash", { command: "npm test" });
+		assert.equal(bash.hookSpecificOutput.permissionDecision, "allow");
+	});
+
+	it("disarms itself once the window has passed", async () => {
+		bridge.setAutoApprove("all", 40);
+		await new Promise((resolve) => setTimeout(resolve, 80));
+
+		assert.equal(bridge.autoApprove.mode, "off");
+		assert.deepEqual(await preToolUse("Bash", { command: "npm test" }), {});
+	});
+
+	it("denies every tool call once the brake is pulled", async () => {
+		const session = bridge.store.resolve();
+		bridge.halt(session);
+
+		const first = await preToolUse("Bash", { command: "npm test" });
+		assert.equal(first.hookSpecificOutput.permissionDecision, "deny");
+		assert.match(first.hookSpecificOutput.permissionDecisionReason, /Stream Deck/);
+
+		await preToolUse("Read", { file_path: "/x" });
+		assert.equal(bridge.store.resolve().haltedCalls, 2, "blocked calls are counted for the key");
+	});
+
+	it("outranks autopilot, so arming cannot defeat the brake", async () => {
+		bridge.setAutoApprove("all", 60_000);
+
+		const blocked = await preToolUse("Bash", { command: "npm test" });
+		assert.equal(blocked.hookSpecificOutput.permissionDecision, "deny");
+
+		bridge.setAutoApprove("off", 0);
+	});
+
+	it("releases itself when the turn ends", async () => {
+		await post({ hook_event_name: "Stop", last_assistant_message: "stopped", turn_number: 1 });
+
+		assert.equal(bridge.store.resolve().haltedAt, undefined);
+		assert.deepEqual(await preToolUse("Bash", { command: "npm test" }), {});
 	});
 });

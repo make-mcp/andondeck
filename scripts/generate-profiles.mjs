@@ -24,6 +24,9 @@ const A = {
 	session: `${PLUGIN}.session`,
 	headless: `${PLUGIN}.headless`,
 	usage: `${PLUGIN}.usage`,
+	autopilot: `${PLUGIN}.autopilot`,
+	halt: `${PLUGIN}.halt`,
+	model: `${PLUGIN}.model`,
 	setup: `${PLUGIN}.setup`,
 };
 
@@ -32,6 +35,8 @@ const STATE_COUNT = {
 	[A.approve]: 2,
 	[A.headless]: 2,
 	[A.setup]: 2,
+	[A.autopilot]: 2,
+	[A.halt]: 2,
 };
 
 /**
@@ -86,6 +91,10 @@ const TIMER = key(A.usage, "Turn timer", { metric: "turn" });
 const CONTEXT = key(A.usage, "Context", { metric: "context" });
 const SESSION = key(A.session, "Session", { mode: "cycle" });
 
+const HALT = key(A.halt, "Stop Claude", { clearQueue: false });
+const AUTOPILOT = key(A.autopilot, "Autopilot", { scope: "safe", minutes: 15 });
+const MODEL = key(A.model, "Model");
+
 const TASK_REVIEW = key(A.headless, "Run Task", {
 	prompt: "Review the current git diff and list anything risky in a few bullets.",
 	label: "Review diff",
@@ -114,13 +123,13 @@ const DEVICES = [
 					"4,0": CLEAR,
 					"0,1": ALLOW,
 					"1,1": DENY,
-					"2,1": COMPACT,
-					"3,1": CONTINUE,
-					"4,1": EXPLAIN,
+					"2,1": HALT,
+					"3,1": COMPACT,
+					"4,1": CONTINUE,
 					"0,2": SESSION,
 					"1,2": TIMER,
 					"2,2": CONTEXT,
-					"3,2": TASK_REVIEW,
+					"3,2": AUTOPILOT,
 					"4,2": SETUP,
 				},
 			},
@@ -136,7 +145,7 @@ const DEVICES = [
 				Actions: {
 					"0,0": STATUS,
 					"1,0": QUEUE_TESTS,
-					"2,0": CLEAR,
+					"2,0": HALT,
 					"0,1": ALLOW,
 					"1,1": DENY,
 					"2,1": SETUP,
@@ -179,7 +188,13 @@ const DEVICES = [
 						label: "Today",
 						timeoutSec: 300,
 					}),
-					"7,2": SETUP,
+					"7,2": CLEAR,
+					"0,3": HALT,
+					"1,3": AUTOPILOT,
+					"2,3": key(A.autopilot, "Autopilot", { scope: "all", minutes: 10 }),
+					"3,3": MODEL,
+					"4,3": key(A.queue, "Queue Prompt", { source: "clipboard", label: "Clipboard" }),
+					"7,3": SETUP,
 				},
 			},
 		],
@@ -196,9 +211,9 @@ const DEVICES = [
 					"1,0": QUEUE_TESTS,
 					"2,0": ALLOW,
 					"3,0": DENY,
-					"0,1": COMPACT,
-					"1,1": CONTINUE,
-					"2,1": TASK_REVIEW,
+					"0,1": HALT,
+					"1,1": COMPACT,
+					"2,1": AUTOPILOT,
 					"3,1": SETUP,
 				},
 			},
@@ -226,8 +241,8 @@ const DEVICES = [
 					"1,0": QUEUE_TESTS,
 					"2,0": ALLOW,
 					"3,0": DENY,
-					"0,1": COMPACT,
-					"1,1": CLEAR,
+					"0,1": HALT,
+					"1,1": COMPACT,
 					"2,1": TIMER,
 					"3,1": SETUP,
 				},

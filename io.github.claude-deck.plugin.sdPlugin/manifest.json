@@ -219,6 +219,73 @@
 			]
 		},
 		{
+			"UUID": "io.github.claude-deck.plugin.autopilot",
+			"Name": "Autopilot",
+			"Tooltip": "Approve tool calls for a set stretch of time, then switch itself back off.",
+			"Icon": "imgs/actions/autopilot/icon",
+			"Controllers": [
+				"Keypad"
+			],
+			"PropertyInspectorPath": "ui/autopilot.html",
+			"SupportedInMultiActions": false,
+			"UserTitleEnabled": false,
+			"DisableAutomaticStates": true,
+			"States": [
+				{
+					"Image": "imgs/actions/autopilot/off",
+					"TitleAlignment": "bottom",
+					"FontSize": 10
+				},
+				{
+					"Image": "imgs/actions/autopilot/on",
+					"TitleAlignment": "bottom",
+					"FontSize": 10
+				}
+			]
+		},
+		{
+			"UUID": "io.github.claude-deck.plugin.halt",
+			"Name": "Stop Claude",
+			"Tooltip": "Emergency brake: blocks every further tool call so Claude winds down and reports back.",
+			"Icon": "imgs/actions/halt/icon",
+			"Controllers": [
+				"Keypad"
+			],
+			"PropertyInspectorPath": "ui/halt.html",
+			"UserTitleEnabled": false,
+			"DisableAutomaticStates": true,
+			"States": [
+				{
+					"Image": "imgs/actions/halt/key",
+					"TitleAlignment": "bottom",
+					"FontSize": 10
+				},
+				{
+					"Image": "imgs/actions/halt/stopped",
+					"TitleAlignment": "bottom",
+					"FontSize": 10
+				}
+			]
+		},
+		{
+			"UUID": "io.github.claude-deck.plugin.model",
+			"Name": "Model",
+			"Tooltip": "Shows the session's model and switches it at the next turn boundary.",
+			"Icon": "imgs/actions/model/icon",
+			"Controllers": [
+				"Keypad"
+			],
+			"PropertyInspectorPath": "ui/model.html",
+			"UserTitleEnabled": false,
+			"States": [
+				{
+					"Image": "imgs/actions/model/key",
+					"TitleAlignment": "bottom",
+					"FontSize": 10
+				}
+			]
+		},
+		{
 			"UUID": "io.github.claude-deck.plugin.setup",
 			"Name": "Connect Claude Code",
 			"Tooltip": "One-time setup: installs the Claude Deck hooks into your Claude Code settings and shows bridge health.",

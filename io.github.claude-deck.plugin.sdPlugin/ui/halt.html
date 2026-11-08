@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<title>Claude Deck</title>
+		<script src="./libs/sdpi-components.js"></script>
+		<style>
+			.hint { color: #9d9a94; font-size: 11px; line-height: 1.45; padding: 4px 0 8px; }
+			.hint code { color: #d97757; }
+			.warn { color: #d9a157; }
+		</style>
+	</head>
+	<body>
+		<sdpi-item label="Queue">
+			<sdpi-checkbox setting="clearQueue" label="Also clear queued prompts"></sdpi-checkbox>
+		</sdpi-item>
+		<sdpi-item label="Session">
+			<sdpi-select setting="session" datasource="getSessions" placeholder="Active session"></sdpi-select>
+		</sdpi-item>
+		<div class="hint">
+			Blocks every tool call Claude tries next, so it stops touching anything and reports back instead. The
+			brake releases itself when the turn ends; press again to release it sooner.
+		</div>
+	</body>
+</html>
