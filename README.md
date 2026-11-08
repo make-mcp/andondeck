@@ -144,6 +144,8 @@ Every request carries a random per-installation token; requests without it are r
 
 On macOS none of this applies — Claude Code is reached natively on loopback.
 
+## Notifications
+
 Terminal notifications are opt-out: when Claude needs permission or a turn fails, the hook response asks
 your terminal to raise a notification (OSC 9), which Windows Terminal, iTerm2, ConEmu and others honour.
 
