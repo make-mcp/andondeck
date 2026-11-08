@@ -348,35 +348,35 @@
 	],
 	"Profiles": [
 		{
-			"Name": "profiles/Claude Deck",
+			"Name": "Claude Deck",
 			"DeviceType": 0,
 			"Readonly": false,
 			"DontAutoSwitchWhenInstalled": true,
 			"AutoInstall": true
 		},
 		{
-			"Name": "profiles/Claude Deck Mini",
+			"Name": "Claude Deck Mini",
 			"DeviceType": 1,
 			"Readonly": false,
 			"DontAutoSwitchWhenInstalled": true,
 			"AutoInstall": true
 		},
 		{
-			"Name": "profiles/Claude Deck XL",
+			"Name": "Claude Deck XL",
 			"DeviceType": 2,
 			"Readonly": false,
 			"DontAutoSwitchWhenInstalled": true,
 			"AutoInstall": true
 		},
 		{
-			"Name": "profiles/Claude Deck Plus",
+			"Name": "Claude Deck Plus",
 			"DeviceType": 7,
 			"Readonly": false,
 			"DontAutoSwitchWhenInstalled": true,
 			"AutoInstall": true
 		},
 		{
-			"Name": "profiles/Claude Deck Neo",
+			"Name": "Claude Deck Neo",
 			"DeviceType": 9,
 			"Readonly": false,
 			"DontAutoSwitchWhenInstalled": true,

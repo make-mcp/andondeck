@@ -13,7 +13,9 @@ import { makeZip } from "./lib/zip.mjs";
 
 const PLUGIN = "io.github.claude-deck.plugin";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const outDir = join(root, `${PLUGIN}.sdPlugin`, "profiles");
+// Beside the manifest, not in a subfolder: that is where Elgato's own bundled
+// profiles live, and it is the only arrangement confirmed to be picked up.
+const outDir = join(root, `${PLUGIN}.sdPlugin`);
 
 const A = {
 	status: `${PLUGIN}.status`,
@@ -267,7 +269,7 @@ for (const device of DEVICES) {
 const manifestPath = join(root, `${PLUGIN}.sdPlugin`, "manifest.json");
 const manifest = JSON.parse(await (await import("node:fs/promises")).readFile(manifestPath, "utf8"));
 manifest.Profiles = DEVICES.map((device) => ({
-	Name: `profiles/${device.name}`,
+	Name: device.name,
 	DeviceType: device.deviceType,
 	Readonly: false,
 	DontAutoSwitchWhenInstalled: true,

@@ -28,10 +28,10 @@
 		<div class="panel" id="diagnostics">Loading…</div>
 
 		<sdpi-item label="">
-			<sdpi-button invoke="connect">Install hooks</sdpi-button>
+			<sdpi-button id="connect">Install hooks</sdpi-button>
 		</sdpi-item>
 		<sdpi-item label="">
-			<sdpi-button invoke="useProfile">Use the Claude Deck layout</sdpi-button>
+			<sdpi-button id="useProfile">Use the Claude Deck layout</sdpi-button>
 		</sdpi-item>
 		<div class="hint">
 			Switches this deck to the ready-made layout for its model. Your own profiles are untouched — switch
@@ -39,7 +39,7 @@
 		</div>
 
 		<sdpi-item label="">
-			<sdpi-button invoke="disconnect">Remove hooks</sdpi-button>
+			<sdpi-button id="disconnect">Remove hooks</sdpi-button>
 		</sdpi-item>
 		<div class="hint">
 			Writes a <code>hooks</code> block into Claude Code's <code>settings.json</code> and keeps a
@@ -134,10 +134,17 @@
 				}
 			});
 
-			const refresh = () => client.send("sendToPlugin", { event: "diagnostics" });
+			const send = (event) => client.send("sendToPlugin", { event });
 
-			refresh();
-			setInterval(refresh, 3000);
+			// sdpi-button renders a plain <button> and does not forward clicks on
+			// its own, so every button is wired explicitly. Clicks cross the shadow
+			// boundary, which is why listening on the host element works.
+			for (const id of ["connect", "disconnect", "useProfile"]) {
+				document.getElementById(id)?.addEventListener("click", () => send(id));
+			}
+
+			send("diagnostics");
+			setInterval(() => send("diagnostics"), 3000);
 		</script>
 	</body>
 </html>
