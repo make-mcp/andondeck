@@ -106,11 +106,14 @@ export class HeadlessAction extends DeckAction<HeadlessSettings> {
 		runs.set(ev.action.id, { startedAt: Date.now() });
 		this.repaint();
 
+		// Run where the hooks were installed, rather than guessing per platform.
+		const location = await runtime.location(settings.runner, settings.distro);
+
 		const result = await runHeadless({
 			prompt: settings.prompt,
 			cwd: settings.cwd || runtime.settings.defaultCwd || undefined,
-			runner: settings.runner ?? runtime.settings.runner,
-			distro: settings.distro || runtime.settings.distro || undefined,
+			location,
+			helpers: await runtime.helperContext(),
 			model: settings.model || undefined,
 			permissionMode: settings.permissionMode || undefined,
 			extraArgs: settings.extraArgs,

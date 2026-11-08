@@ -5,13 +5,25 @@ import streamDeck from "@elgato/streamdeck";
 import type { JsonValue } from "@elgato/utils";
 
 import { Bridge } from "./bridge/server.js";
-import { hooksInstalled, installHooks, uninstallHooks } from "./claude/hooks.js";
-import { hasMirroredNetworking, listWslDistros, resolveClaudeLocation, wslHostAddress } from "./claude/env.js";
+import { hooksInstalled, installedHookUrl, installHooks, uninstallHooks } from "./claude/hooks.js";
+import { helperPath } from "./claude/helpers.js";
+import {
+	detectClaudeLocations,
+	hasMirroredNetworking,
+	listWslDistros,
+	probeReachability,
+	resolveClaudeLocation,
+	resolveNodeCommand,
+	wslHostAddress,
+} from "./claude/env.js";
 import type { ClaudeLocation } from "./claude/env.js";
-import { resolveRunner, type Runner } from "./claude/headless.js";
+import type { Runner } from "./claude/headless.js";
 
 /** Default bridge port; high, static and unlikely to collide. */
 export const DEFAULT_PORT = 38274;
+
+/** How often the installed hook URL is checked against the live one. */
+const RECONCILE_INTERVAL_MS = 60_000;
 
 export type GlobalSettings = {
 	port: number;
@@ -27,6 +39,8 @@ export type GlobalSettings = {
 	runner: Runner;
 	distro: string;
 	defaultCwd: string;
+	/** Explicit Claude Code settings.json, for installs the detection cannot find. */
+	settingsOverride: string;
 	[key: string]: JsonValue;
 };
 
@@ -41,6 +55,7 @@ const DEFAULTS: GlobalSettings = {
 	runner: "auto",
 	distro: "",
 	defaultCwd: "",
+	settingsOverride: "",
 };
 
 export type RuntimeEvents = {
@@ -112,10 +127,51 @@ class Runtime extends EventEmitter<RuntimeEvents> {
 		await bridge.start();
 		this.#syncApprovalMode();
 
+		// The bridge may have landed on a different port than the one requested.
+		if (bridge.options.port !== this.#settings.port) {
+			this.#settings.port = bridge.options.port;
+			await streamDeck.settings.setGlobalSettings(this.#settings);
+		}
+
+		// A WSL gateway address changes on every `wsl --shutdown`, and a port can
+		// move; both leave the installed hooks pointing nowhere. Repair quietly.
+		void this.reconcile();
+		setInterval(() => void this.reconcile(), RECONCILE_INTERVAL_MS).unref?.();
+		streamDeck.system.onSystemDidWakeUp(() => void this.reconcile());
+
 		// Property inspectors bind straight to global settings, so mirror their edits.
 		streamDeck.settings.onDidReceiveGlobalSettings<Partial<GlobalSettings>>((ev) => {
 			void this.#adopt(ev.settings);
 		});
+	}
+
+	/**
+	 * Re-points the installed hooks when the URL they carry has gone stale.
+	 * @returns The new URL when it changed, otherwise `undefined`.
+	 */
+	public async reconcile(): Promise<string | undefined> {
+		if (!this.#settings.hooksInstalled || !this.#bridge?.listening) {
+			return undefined;
+		}
+
+		try {
+			const location = await this.location();
+			const [installed, wanted] = await Promise.all([
+				installedHookUrl(location.settingsPath),
+				this.hookBaseUrl(),
+			]);
+
+			if (!installed || installed === wanted) {
+				return undefined;
+			}
+
+			streamDeck.logger.info(`hook url moved from ${installed} to ${wanted}; reinstalling`);
+			await this.connect();
+			return wanted;
+		} catch (error) {
+			streamDeck.logger.warn(`reconcile failed: ${(error as Error).message}`);
+			return undefined;
+		}
 	}
 
 	/** Takes on settings written by a property inspector without echoing them back. */
@@ -198,9 +254,18 @@ class Runtime extends EventEmitter<RuntimeEvents> {
 		return `http://${host ?? "127.0.0.1"}:${port}`;
 	}
 
-	/** Where this machine's Claude Code keeps its configuration. */
-	public location(): Promise<ClaudeLocation> {
-		return resolveClaudeLocation(resolveRunner(this.#settings.runner), this.#settings.distro || undefined);
+	/**
+	 * Where this machine's Claude Code keeps its configuration.
+	 * @param runner Overrides the plugin-wide runner, for a single action.
+	 * @param distro Overrides the plugin-wide WSL distribution.
+	 * @returns The resolved location.
+	 */
+	public location(runner?: Runner, distro?: string): Promise<ClaudeLocation> {
+		return resolveClaudeLocation(
+			runner || this.#settings.runner,
+			distro || this.#settings.distro || undefined,
+			this.#settings.settingsOverride,
+		);
 	}
 
 	/** Writes the hooks into Claude Code's settings and records that we did. */
@@ -219,6 +284,7 @@ class Runtime extends EventEmitter<RuntimeEvents> {
 			deckApprovals: this.#settings.deckApprovals,
 			idleWake: this.#settings.idleWake,
 			location,
+			nodeCommand: this.#settings.idleWake ? await resolveNodeCommand(location) : undefined,
 		});
 
 		await this.update({ hooksInstalled: true, distro: location.distro ?? this.#settings.distro });
@@ -229,6 +295,11 @@ class Runtime extends EventEmitter<RuntimeEvents> {
 		const path = await uninstallHooks((await this.location()).settingsPath);
 		await this.update({ hooksInstalled: false });
 		return path;
+	}
+
+	/** Bridge details helper scripts need when they are written on demand. */
+	public async helperContext(): Promise<{ baseUrl: string; token: string }> {
+		return { baseUrl: await this.hookBaseUrl(), token: this.#settings.token };
 	}
 
 	/** Snapshot for the property inspectors. */
@@ -244,6 +315,18 @@ class Runtime extends EventEmitter<RuntimeEvents> {
 			locationKind: location?.kind,
 			sessions: this.store.summaries(),
 			distros: (await listWslDistros()).map((d) => d.name),
+			nodeCommand: location ? await resolveNodeCommand(location).catch(() => undefined) : undefined,
+			detected: (await detectClaudeLocations().catch(() => [])).map((c) => ({
+				kind: c.kind,
+				distro: c.distro ?? null,
+				settingsPath: c.settingsPath,
+			})),
+			reachable:
+				location && this.#settings.hooksInstalled
+					? await probeReachability(location, await this.hookBaseUrl(), helperPath(location, "reach")).catch(
+							() => "unknown",
+						)
+					: "unknown",
 			platform: process.platform,
 			settings: this.#settings,
 		};

@@ -27,8 +27,10 @@ src/
 │   ├── summarize.ts     tool calls → one line that fits on a 72px key
 │   └── types.ts         hook payloads and session shapes
 ├── claude/
-│   ├── env.ts           locates Claude Code's config, incl. across the WSL boundary
-│   ├── hooks.ts         installs / removes the hook block; generates the idle-wake helper
+│   ├── env.ts           detects Claude Code installs, incl. across the WSL boundary
+│   ├── hooks.ts         installs / removes the hook block
+│   ├── helpers.ts       generates the shell helpers that live beside Claude's config
+│   ├── locate.ts        finds node / claude without a login shell
 │   ├── headless.ts      `claude -p` runner
 │   └── transcript.ts    best-effort token sampling from the session JSONL
 ├── actions/             one file per Stream Deck action, all extending DeckAction
@@ -96,6 +98,28 @@ On Windows with Claude Code inside WSL, two boundaries have to be bridged, both 
 
 A random per-installation token guards the non-loopback bind; requests without `X-Claude-Deck-Token` get
 a 401.
+
+## Surviving other people's setups
+
+Three findings shaped this, all verified against a real Windows + WSL + nvm machine:
+
+1. **A non-login shell cannot see a version-managed install.** Ubuntu's `.bashrc` begins with a guard that
+   returns immediately when the shell is not interactive, so `bash -lc "command -v node"` finds nothing even
+   though the user's terminal has node on `PATH`. `locate.ts` generates a probe over known install locations
+   instead, and `helpers.ts` writes it as a script so it is re-evaluated on every run — surviving later
+   upgrades rather than freezing a path at install time.
+
+2. **`wsl.exe` mangles shell source passed as an argument.** The same script that works as a file fails
+   inline, with `$HOME` expanding to nothing. Everything that has to run inside WSL is therefore written to
+   a file first; only plain arguments cross the boundary.
+
+3. **Detection beats assumption.** `detectClaudeLocations()` ranks a native install against every
+   non-system WSL distribution by how recently its config was touched, reading the filesystem rather than
+   executing anything. Assuming WSL on Windows would break every native user, and vice versa.
+
+`runtime.reconcile()` closes the loop: a WSL gateway address changes on every `wsl --shutdown`, so the
+installed hook URL is compared against the live one every minute and on system wake, and re-installed when
+it has drifted.
 
 ## Rendering
 

@@ -103,3 +103,26 @@ The generated helper at `~/.claude/claude-deck/idle-wake.mjs` is safe to delete 
 # macOS
 ~/Library/Application Support/com.elgato.StreamDeck/Plugins/io.github.claude-deck.plugin.sdPlugin/logs
 ```
+
+## "Claude reaches it: NO"
+
+The setup panel runs a real connection test from Claude Code's side. A `NO` means the bridge is listening
+but Claude Code cannot open a socket to it — on Windows that is almost always the firewall blocking the
+inbound connection from WSL. Allow the Stream Deck app, or switch WSL to mirrored networking so the
+traffic never leaves loopback.
+
+## Detection picked the wrong Claude
+
+The panel lists what it found under **Also found**. If the wrong one is in use:
+
+- set **Runner** to *Run claude directly* or *Run claude inside WSL*, and pick the **Distribution**; or
+- for anything unusual (`CLAUDE_CONFIG_DIR`, a portable install), put the exact path to `settings.json`
+  into **Advanced → Settings file**.
+
+Press **Install hooks** afterwards so the hooks land in the right file.
+
+## "Node for hooks" is empty
+
+Only matters for idle wake. The generated wrapper searches `PATH`, nvm, fnm, volta, bun, asdf, Homebrew
+and the usual system locations at run time, so an empty value here is not fatal — but if idle wake never
+fires, check that `node` exists somewhere Claude Code's shell can reach.

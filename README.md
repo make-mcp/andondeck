@@ -47,6 +47,12 @@ is configured with `onFailure: "continue"` — Claude Code behaves exactly as if
 | **Usage & Timer** | Turn timer, tool calls, token counts and context pressure. |
 | **Connect Claude Code** | One-time setup. Installs the hooks, shows bridge health and every setting. |
 
+## Ready-made profiles
+
+The plugin ships a layout for every supported device, designed for its grid rather than cropped from a
+bigger one — Stream Deck, Mini, XL, + (with the dials wired to the queue, session and usage) and Neo.
+Pick one under **Profiles → +** in the Stream Deck app; nothing is installed or switched automatically.
+
 ## Install
 
 ### From source
@@ -54,13 +60,15 @@ is configured with `onFailure: "continue"` — Claude Code behaves exactly as if
 Requires Node.js 20.5+ (24+ recommended) and Stream Deck 6.9+.
 
 ```bash
-git clone https://github.com/claude-deck/claude-deck.git
+git clone https://github.com/make-mcp/claude-deck.git
 cd claude-deck
 npm install
 npm run build
-npx @elgato/cli link io.github.claude-deck.plugin.sdPlugin
-npx @elgato/cli restart io.github.claude-deck.plugin
+npm run link
 ```
+
+`npm run link` also works when the repository lives inside WSL but Stream Deck runs on the Windows host,
+which the Elgato CLI's own `link` cannot do.
 
 ### Connect
 
@@ -84,6 +92,25 @@ generated helper (`~/.claude/claude-deck/idle-wake.mjs`) registered as an async 
 by default and can be switched off in **Connect Claude Code** → *Idle wake*.
 
 Without idle wake, a prompt queued against an idle session simply waits until you send something yourself.
+
+## Working across installs
+
+Hooks and `wsl.exe` both spawn commands *without* a login shell, and Ubuntu's `.bashrc` returns early when
+it is not interactive — so a `node` or `claude` installed through nvm, fnm, volta or bun is invisible to a
+bare command name, even though it works perfectly in your own terminal. Claude Deck therefore:
+
+- **generates small shell helpers** next to your Claude Code config that locate the executable at run time,
+  covering PATH, nvm, fnm, volta, bun, asdf, Homebrew and the native installer;
+- **never passes shell source through `wsl.exe`** — its argument parsing mangles quoting badly enough to
+  blank out `$HOME`. Scripts are delivered as files and only plain arguments cross the boundary;
+- **detects where Claude Code actually lives** rather than assuming, ranking a native install against every
+  WSL distribution by which was used most recently;
+- **repairs itself** when the WSL gateway address moves or the bridge lands on a different port, re-pointing
+  the installed hooks instead of going quietly dead;
+- **reports reachability** in the setup panel, so a blocking firewall is visible rather than silent.
+
+If detection still picks the wrong install — `CLAUDE_CONFIG_DIR`, an unusual layout — point
+**Connect Claude Code → Advanced → Settings file** at the right `settings.json`.
 
 ## Windows and WSL
 
@@ -112,8 +139,10 @@ reachable on the local filesystem.
 
 ```bash
 npm run watch      # rebuild and hot-reload into Stream Deck
-npm test           # bridge and hook-installation tests
+npm test           # bridge, hook-installation and executable-location tests
 npm run validate   # Elgato manifest validation
+npm run link       # link the built plugin into Stream Deck (works from WSL too)
+npm run profiles   # regenerate the bundled device profiles
 npm run pack       # build a .streamDeckPlugin into dist/
 ```
 

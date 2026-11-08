@@ -80,6 +80,15 @@
 			<sdpi-textfield setting="defaultCwd" global placeholder="Working folder for Run Task keys"></sdpi-textfield>
 		</sdpi-item>
 
+		<h3>Advanced</h3>
+		<sdpi-item label="Settings file">
+			<sdpi-textfield setting="settingsOverride" global placeholder="Leave empty unless detection picked the wrong one"></sdpi-textfield>
+		</sdpi-item>
+		<div class="hint">
+			Point this at Claude Code's <code>settings.json</code> if you use <code>CLAUDE_CONFIG_DIR</code> or an install
+			the detection cannot see. Press <strong>Install hooks</strong> afterwards.
+		</div>
+
 		<script>
 			const panel = document.querySelector("#diagnostics");
 
@@ -90,9 +99,18 @@
 				panel.innerHTML = `<dl>
 					${row("Bridge", data.listening ? "listening" : (data.error ?? "not listening"), data.listening ? "ok" : "bad")}
 					${row("Hooks", data.hooksInstalled ? "installed" : "not installed", data.hooksInstalled ? "ok" : "bad")}
+					${row(
+						"Claude reaches it",
+						data.reachable === "ok" ? "yes" : data.reachable === "unreachable" ? "NO — check firewall" : "not checked yet",
+						data.reachable === "ok" ? "ok" : data.reachable === "unreachable" ? "bad" : undefined,
+					)}
 					${row("Hook URL", data.baseUrl)}
 					${row("Claude at", data.locationKind === "wsl" ? `WSL · ${data.settings?.distro || "default"}` : "this machine")}
 					${row("Settings", data.settingsPath)}
+					${row("Node for hooks", data.nodeCommand)}
+					${row("Also found", (data.detected ?? []).length > 1
+						? data.detected.slice(1).map((d) => `${d.kind}${d.distro ? " · " + d.distro : ""}`).join("<br />")
+						: "nothing else")}
 					${row("Sessions", (data.sessions ?? []).length
 						? data.sessions.map((s) => `${s.project} · ${s.status}`).join("<br />")
 						: "none seen yet")}

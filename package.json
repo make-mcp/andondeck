@@ -6,11 +6,11 @@
   "author": "claude-deck contributors",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/claude-deck/claude-deck.git"
+    "url": "git+https://github.com/make-mcp/claude-deck.git"
   },
-  "homepage": "https://github.com/claude-deck/claude-deck#readme",
+  "homepage": "https://github.com/make-mcp/claude-deck#readme",
   "bugs": {
-    "url": "https://github.com/claude-deck/claude-deck/issues"
+    "url": "https://github.com/make-mcp/claude-deck/issues"
   },
   "keywords": [
     "stream-deck",
@@ -26,15 +26,17 @@
     "node": ">=20.5.1"
   },
   "scripts": {
-    "build": "npm run icons && rollup -c",
+    "build": "npm run icons && npm run profiles && rollup -c",
     "watch": "npm run icons && rollup -c -w --watch.onEnd=\"streamdeck restart io.github.claude-deck.plugin\"",
     "icons": "node scripts/generate-icons.mjs",
     "validate": "streamdeck validate",
     "pack": "npm run build && streamdeck pack io.github.claude-deck.plugin.sdPlugin --output dist --force",
-    "link": "streamdeck link io.github.claude-deck.plugin.sdPlugin",
+    "link": "node scripts/dev-link.mjs",
     "typecheck": "tsc --noEmit",
     "test": "node --test tests/*.test.mjs",
-    "pretest": "tsc -p tsconfig.test.json && cp .test-build-package.json .test-build/package.json"
+    "pretest": "tsc -p tsconfig.test.json && cp .test-build-package.json .test-build/package.json",
+    "unlink": "node scripts/dev-link.mjs --unlink",
+    "profiles": "node scripts/generate-profiles.mjs"
   },
   "dependencies": {
     "@elgato/streamdeck": "^2.1.2",

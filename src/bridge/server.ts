@@ -34,6 +34,9 @@ type IdleWaiter = {
 /** How long an idle-wake long-poll is held before the hook is told to give up. */
 const IDLE_WAIT_MS = 9 * 60 * 1000;
 
+/** Consecutive ports tried before giving up on binding. */
+const PORT_ATTEMPTS = 10;
+
 export type BridgeEvents = {
 	change: [];
 	notify: [{ title: string; body: string; session: SessionState }];
@@ -97,31 +100,58 @@ export class Bridge extends EventEmitter<BridgeEvents> {
 		}
 	}
 
+	/**
+	 * Binds the bridge, walking forward a few ports if the configured one is taken.
+	 *
+	 * Another plugin, a dev instance or an unrelated service can hold the default
+	 * port; falling forward keeps the plugin usable, and the caller persists
+	 * whichever port actually won so the hooks can be pointed at it.
+	 */
 	public async start(): Promise<void> {
 		if (this.#server) {
 			return;
 		}
 
-		const server = createServer((req, res) => void this.#handle(req, res));
-		this.#server = server;
+		const host = this.#options.exposeToWsl ? "0.0.0.0" : "127.0.0.1";
 
-		await new Promise<void>((resolve) => {
-			server.once("error", (error: NodeJS.ErrnoException) => {
-				this.#lastError =
-					error.code === "EADDRINUSE"
-						? `Port ${this.#options.port} is already in use. Pick another port in the Connect Claude Code action.`
-						: error.message;
-				this.#listening = false;
-				this.emit("change");
-				resolve();
-			});
+		for (let attempt = 0; attempt < PORT_ATTEMPTS; attempt++) {
+			const port = this.#options.port + attempt;
+			const bound = await this.#listen(host, port);
 
-			server.listen(this.#options.port, this.#options.exposeToWsl ? "0.0.0.0" : "127.0.0.1", () => {
+			if (bound) {
+				this.#options = { ...this.#options, port };
 				this.#listening = true;
 				this.#lastError = undefined;
-				this.emit("log", `bridge listening on ${this.#options.exposeToWsl ? "0.0.0.0" : "127.0.0.1"}:${this.#options.port}`);
+				this.emit("log", `bridge listening on ${host}:${port}`);
 				this.emit("change");
-				resolve();
+				return;
+			}
+		}
+
+		this.#listening = false;
+		this.#lastError = `Ports ${this.#options.port}-${this.#options.port + PORT_ATTEMPTS - 1} are all in use. Pick another port in the Connect Claude Code action.`;
+		this.emit("change");
+	}
+
+	/** Attempts a single bind; resolves false when the port is unavailable. */
+	#listen(host: string, port: number): Promise<boolean> {
+		return new Promise<boolean>((resolve) => {
+			const server = createServer((req, res) => void this.#handle(req, res));
+
+			const onError = (error: NodeJS.ErrnoException): void => {
+				server.close();
+				if (error.code !== "EADDRINUSE" && error.code !== "EACCES") {
+					this.#lastError = error.message;
+				}
+				resolve(false);
+			};
+
+			server.once("error", onError);
+			server.listen(port, host, () => {
+				server.removeListener("error", onError);
+				server.on("error", (error) => this.emit("log", `bridge error: ${error.message}`));
+				this.#server = server;
+				resolve(true);
 			});
 		});
 	}

@@ -7,8 +7,8 @@
 	"Category": "Claude Deck",
 	"CategoryIcon": "imgs/plugin/category-icon",
 	"Icon": "imgs/plugin/marketplace",
-	"URL": "https://github.com/claude-deck/claude-deck",
-	"SupportURL": "https://github.com/claude-deck/claude-deck/issues",
+	"URL": "https://github.com/make-mcp/claude-deck",
+	"SupportURL": "https://github.com/make-mcp/claude-deck/issues",
 	"CodePath": "bin/plugin.js",
 	"PropertyInspectorPath": "ui/shared.html",
 	"UUID": "io.github.claude-deck.plugin",
@@ -242,6 +242,43 @@
 					"FontSize": 10
 				}
 			]
+		}
+	],
+	"Profiles": [
+		{
+			"Name": "profiles/Claude Deck",
+			"DeviceType": 0,
+			"Readonly": false,
+			"DontAutoSwitchWhenInstalled": true,
+			"AutoInstall": false
+		},
+		{
+			"Name": "profiles/Claude Deck Mini",
+			"DeviceType": 1,
+			"Readonly": false,
+			"DontAutoSwitchWhenInstalled": true,
+			"AutoInstall": false
+		},
+		{
+			"Name": "profiles/Claude Deck XL",
+			"DeviceType": 2,
+			"Readonly": false,
+			"DontAutoSwitchWhenInstalled": true,
+			"AutoInstall": false
+		},
+		{
+			"Name": "profiles/Claude Deck Plus",
+			"DeviceType": 7,
+			"Readonly": false,
+			"DontAutoSwitchWhenInstalled": true,
+			"AutoInstall": false
+		},
+		{
+			"Name": "profiles/Claude Deck Neo",
+			"DeviceType": 9,
+			"Readonly": false,
+			"DontAutoSwitchWhenInstalled": true,
+			"AutoInstall": false
 		}
 	]
 }
