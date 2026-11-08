@@ -38,9 +38,16 @@ function escapeXml(value: string): string {
 	});
 }
 
-/** Wraps a finished SVG document into the data URI Stream Deck expects. */
+/**
+ * Wraps a finished SVG document into the data URI Stream Deck expects.
+ *
+ * Base64 rather than percent-encoding: the latter leaves `#` in colour values
+ * as `%23`, which not every consumer decodes before handing the markup to an
+ * SVG parser.
+ */
 export function toDataUri(svg: string): string {
-	return `data:image/svg+xml;charset=utf8,${encodeURIComponent(svg.replace(/\s{2,}/g, " ").trim())}`;
+	const compact = svg.replace(/\s{2,}/g, " ").trim();
+	return `data:image/svg+xml;base64,${Buffer.from(compact, "utf8").toString("base64")}`;
 }
 
 const FONT = "'Segoe UI','SF Pro Text',system-ui,-apple-system,sans-serif";

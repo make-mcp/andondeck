@@ -87,7 +87,7 @@ export class QueueControlAction extends DeckAction<QueueControlSettings> {
 		const queue = runtime.store.queueFor(session);
 
 		if (queue.length === 0) {
-			await ev.action.showAlert();
+			await this.refuse(ev.action, "Queue is empty");
 			return;
 		}
 

@@ -77,7 +77,7 @@ export class SessionAction extends DeckAction<SessionSettings> {
 		const sessions = runtime.store.list();
 
 		if (sessions.length === 0) {
-			await ev.action.showAlert();
+			await this.refuse(ev.action, "No Claude session yet");
 			return;
 		}
 

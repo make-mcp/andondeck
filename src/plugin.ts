@@ -15,6 +15,24 @@ import { StatusAction } from "./actions/status.js";
 import { UsageAction } from "./actions/usage.js";
 import { runtime } from "./runtime.js";
 
+streamDeck.logger.setLevel("debug");
+
+// A key press that throws must leave a trace; the SDK does not report one.
+process.on("unhandledRejection", (reason) => {
+	streamDeck.logger.error(`unhandled rejection: ${reason instanceof Error ? reason.stack : String(reason)}`);
+});
+process.on("uncaughtException", (error) => {
+	streamDeck.logger.error(`uncaught exception: ${error.stack ?? error.message}`);
+});
+
+streamDeck.actions.onKeyDown((ev) => {
+	streamDeck.logger.info(`keyDown ${ev.action.manifestId} settings=${JSON.stringify(ev.payload.settings)}`);
+});
+
+streamDeck.actions.onWillAppear((ev) => {
+	streamDeck.logger.info(`willAppear ${ev.action.manifestId}`);
+});
+
 streamDeck.actions.registerAction(new StatusAction());
 streamDeck.actions.registerAction(new QueuePromptAction());
 streamDeck.actions.registerAction(new QueueControlAction());

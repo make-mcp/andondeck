@@ -59,12 +59,12 @@ export class QueuePromptAction extends DeckAction<QueueSettings> {
 		const prompt = source === "clipboard" ? await this.#fromClipboard(template) : text?.trim();
 
 		if (!prompt) {
-			await ev.action.showAlert();
+			await this.refuse(ev.action, source === "clipboard" ? "Clipboard is empty" : "Set a prompt first");
 			return;
 		}
 
 		if (!allowDuplicates && runtime.store.queueFor(session).some((item) => item.text === prompt)) {
-			await ev.action.showAlert();
+			await this.refuse(ev.action, "Already queued");
 			return;
 		}
 

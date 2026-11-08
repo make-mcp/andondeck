@@ -60,7 +60,7 @@ export class ModelAction extends DeckAction<ModelSettings> {
 		const session = runtime.store.resolve(settings.session);
 
 		if (!session) {
-			await ev.action.showAlert();
+			await this.refuse(ev.action, "No Claude session yet");
 			return;
 		}
 

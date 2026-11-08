@@ -93,13 +93,13 @@ export class HeadlessAction extends DeckAction<HeadlessSettings> {
 		const settings = ev.payload.settings;
 
 		if (!settings.prompt?.trim()) {
-			await ev.action.showAlert();
+			await this.refuse(ev.action, "Set a task first");
 			return;
 		}
 
 		if (runs.get(ev.action.id)?.done === undefined && runs.has(ev.action.id)) {
 			// Already running; a second press should not start a parallel run.
-			await ev.action.showAlert();
+			await this.refuse(ev.action, "Already running");
 			return;
 		}
 

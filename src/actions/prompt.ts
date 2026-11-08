@@ -80,7 +80,7 @@ export class PromptAction extends DeckAction<PromptSettings> {
 		const { text, label } = resolvePreset(settings);
 
 		if (!text.trim()) {
-			await ev.action.showAlert();
+			await this.refuse(ev.action, "Set a prompt first");
 			return;
 		}
 

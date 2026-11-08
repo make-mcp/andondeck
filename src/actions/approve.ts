@@ -85,7 +85,7 @@ export class ApproveAction extends DeckAction<ApproveSettings> {
 		const match = runtime.store.firstPending(settings.session);
 
 		if (!match) {
-			await ev.action.showAlert();
+			await this.refuse(ev.action, runtime.settings.deckApprovals ? "Nothing to approve" : "Deck approvals are off");
 			return;
 		}
 
@@ -101,7 +101,7 @@ export class ApproveAction extends DeckAction<ApproveSettings> {
 			await ev.action.showOk();
 		} else {
 			// The request fell through to the terminal before we could answer it.
-			await ev.action.showAlert();
+			await this.refuse(ev.action, "Answered in the terminal");
 		}
 
 		this.repaint();

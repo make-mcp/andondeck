@@ -58,7 +58,7 @@ export class HaltAction extends DeckAction<HaltSettings> {
 		const session = runtime.store.resolve(settings.session);
 
 		if (!session) {
-			await ev.action.showAlert();
+			await this.refuse(ev.action, "No Claude session yet");
 			return;
 		}
 
