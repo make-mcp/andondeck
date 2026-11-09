@@ -14,6 +14,7 @@
 			<sdpi-select setting="verdict" default="allow">
 				<option value="allow">Allows the request</option>
 				<option value="deny">Denies the request</option>
+				<option value="always">Always allows (stores a rule)</option>
 			</sdpi-select>
 		</sdpi-item>
 		<sdpi-item label="Confirm">
@@ -22,6 +23,7 @@
 		<sdpi-item label="Session">
 			<sdpi-select setting="session" datasource="getSessions" placeholder="Any session"></sdpi-select>
 		</sdpi-item>
+		<div class="hint"><strong>Always</strong> allows and saves the same rule Claude Code's own "Yes, and don't ask again" would — usually into <code>.claude/settings.local.json</code> of the project. The key shows the rule before you press it.</div>
 		<div class="hint">Requests are only held open for the deck while an Approve key is on screen. Take the key away and Claude Code asks in the terminal as usual. Timeout and master switch live in <strong>Connect Claude Code</strong>.</div>
 	</body>
 </html>

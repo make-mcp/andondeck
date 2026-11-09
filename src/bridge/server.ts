@@ -5,7 +5,16 @@ import { SessionStore } from "./store.js";
 import { summarizeTool } from "./summarize.js";
 import { readTranscriptUsage } from "../claude/transcript.js";
 import { READ_ONLY_TOOLS } from "./types.js";
-import type { AutoApprove, AutoApproveMode, HookInput, HookOutput, PendingPermission, SessionState } from "./types.js";
+import type {
+	AutoApprove,
+	AutoApproveMode,
+	HookInput,
+	HookOutput,
+	LimitWindow,
+	PendingPermission,
+	PlanLimits,
+	SessionState,
+} from "./types.js";
 
 /** Largest hook payload the bridge will read, to keep a runaway transcript from eating memory. */
 const MAX_BODY_BYTES = 4 * 1024 * 1024;
@@ -77,6 +86,11 @@ export class Bridge extends EventEmitter<BridgeEvents> {
 	readonly #idleWaiters = new Map<string, IdleWaiter>();
 
 	#autoApprove: AutoApprove = { mode: "off", until: 0 };
+
+	/** Latest plan limits from the status line tee; `undefined` until one arrives. */
+	public planLimits: PlanLimits | undefined;
+
+	#statusSeen = false;
 
 	public constructor(options: BridgeOptions) {
 		super();
@@ -246,18 +260,30 @@ export class Bridge extends EventEmitter<BridgeEvents> {
 	}
 
 	/** Answers an open permission request. */
-	public decide(toolUseId: string, behavior: "allow" | "deny", reason?: string): boolean {
+	/**
+	 * Answers an open permission request.
+	 * @param behavior `always` allows and also stores a permanent rule, the same
+	 * one Claude Code offers as "Yes, and don't ask again".
+	 */
+	public decide(toolUseId: string, behavior: "allow" | "deny" | "always", reason?: string): boolean {
 		const waiter = this.#awaiting.get(toolUseId);
 		if (!waiter) {
 			return false;
 		}
+
+		const pending = this.store.list().find((session) => session.pending?.toolUseId === toolUseId)?.pending;
 
 		clearTimeout(waiter.timer);
 		this.#awaiting.delete(toolUseId);
 		waiter.resolve({
 			hookSpecificOutput: {
 				hookEventName: "PermissionRequest",
-				decision: behavior === "allow" ? { behavior: "allow" } : { behavior: "deny", message: reason ?? "Denied from Stream Deck" },
+				decision:
+					behavior === "deny"
+						? { behavior: "deny", message: reason ?? "Denied from Stream Deck" }
+						: behavior === "always" && pending
+							? { behavior: "allow", updatedPermissions: permanentRule(pending) }
+							: { behavior: "allow" },
 			},
 		});
 
@@ -279,7 +305,7 @@ export class Bridge extends EventEmitter<BridgeEvents> {
 			return;
 		}
 
-		if (req.method !== "POST" || (url.pathname !== "/hook" && url.pathname !== "/wait")) {
+		if (req.method !== "POST" || !["/hook", "/wait", "/status"].includes(url.pathname)) {
 			this.#json(res, 404, { error: "not found" });
 			return;
 		}
@@ -295,6 +321,12 @@ export class Bridge extends EventEmitter<BridgeEvents> {
 			input = JSON.parse(await this.#readBody(req)) as HookInput;
 		} catch (error) {
 			this.#json(res, 400, { error: (error as Error).message });
+			return;
+		}
+
+		if (url.pathname === "/status") {
+			this.#onStatusLine(input as unknown as Record<string, unknown>);
+			this.#json(res, 200, {});
 			return;
 		}
 
@@ -480,6 +512,7 @@ export class Bridge extends EventEmitter<BridgeEvents> {
 			toolInput,
 			summary: summarizeTool(toolName, toolInput),
 			rule: typeof input.permission_rule === "string" ? input.permission_rule : undefined,
+			suggestions: Array.isArray(input.permission_suggestions) ? input.permission_suggestions : undefined,
 			receivedAt: Date.now(),
 			expiresAt: Date.now() + this.#options.approvalTimeoutMs,
 		};
@@ -527,6 +560,44 @@ export class Bridge extends EventEmitter<BridgeEvents> {
 
 		this.emit("change");
 		return {};
+	}
+
+	/**
+	 * Takes in Claude Code's status line snapshot.
+	 *
+	 * It is the only place plan limits appear, and it also carries the exact
+	 * context window size, which beats guessing it from the model name.
+	 */
+	#onStatusLine(input: Record<string, unknown>): void {
+		const limits = parsePlanLimits(input.rate_limits);
+		if (limits) {
+			if (!this.planLimits) {
+				this.emit("log", `plan limits: 5h ${limits.fiveHour?.usedPercent ?? "—"}%, week ${limits.sevenDay?.usedPercent ?? "—"}%`);
+			}
+			this.planLimits = limits;
+		} else if (!this.#statusSeen) {
+			this.emit("log", "status line connected (no plan limits reported — API key or first response pending)");
+		}
+		this.#statusSeen = true;
+
+		const sessionId = typeof input.session_id === "string" ? input.session_id : undefined;
+		const session = sessionId ? this.store.get(sessionId) : undefined;
+		const context = input.context_window as
+			| { context_window_size?: number; current_usage?: Record<string, number> | null }
+			| undefined;
+
+		if (session && context) {
+			if (typeof context.context_window_size === "number") {
+				session.usage.contextWindow = context.context_window_size;
+			}
+			const usage = context.current_usage;
+			if (usage) {
+				session.usage.contextTokens =
+					(usage.input_tokens ?? 0) + (usage.cache_creation_input_tokens ?? 0) + (usage.cache_read_input_tokens ?? 0);
+			}
+		}
+
+		this.store.touch();
 	}
 
 	async #onStop(session: SessionState, input: HookInput): Promise<HookOutput> {
@@ -667,4 +738,51 @@ export class Bridge extends EventEmitter<BridgeEvents> {
 		res.writeHead(status, { "content-type": "application/json", "content-length": Buffer.byteLength(payload) });
 		res.end(payload);
 	}
+}
+
+/**
+ * The permanent rule to store for an "always allow".
+ *
+ * Claude Code's own suggestions win: they are exactly what its terminal prompt
+ * would save, including the narrowed Bash prefix or directory grant. Without
+ * them, a rule for the tool is written to the project's local settings — for
+ * Bash the exact command, never the whole tool, so one "always" cannot turn
+ * into permission to run anything.
+ */
+export function permanentRule(pending: PendingPermission): unknown[] {
+	if (pending.suggestions?.length) {
+		return pending.suggestions;
+	}
+
+	const command = pending.toolInput.command;
+	const rule =
+		pending.toolName === "Bash"
+			? typeof command === "string" && command.trim()
+				? { toolName: "Bash", ruleContent: command.trim() }
+				: undefined
+			: { toolName: pending.toolName };
+
+	return rule ? [{ type: "addRules", rules: [rule], behavior: "allow", destination: "localSettings" }] : [];
+}
+
+/**
+ * Reads `rate_limits` from a status line snapshot.
+ * @returns The limits, or `undefined` when none were reported (API-key users).
+ */
+export function parsePlanLimits(raw: unknown): PlanLimits | undefined {
+	if (!raw || typeof raw !== "object") {
+		return undefined;
+	}
+
+	const window = (value: unknown): LimitWindow | undefined => {
+		const entry = value as { used_percentage?: unknown; resets_at?: unknown } | undefined;
+		if (typeof entry?.used_percentage !== "number" || typeof entry.resets_at !== "number") {
+			return undefined;
+		}
+		return { usedPercent: entry.used_percentage, resetsAt: entry.resets_at * 1000 };
+	};
+
+	const source = raw as Record<string, unknown>;
+	const limits: PlanLimits = { fiveHour: window(source.five_hour), sevenDay: window(source.seven_day), updatedAt: Date.now() };
+	return limits.fiveHour || limits.sevenDay ? limits : undefined;
 }

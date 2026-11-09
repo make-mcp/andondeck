@@ -46,6 +46,33 @@
 			<code>.claude-deck.bak</code> copy of the previous file. Everything else in that file is left alone.
 		</div>
 
+		<h3>Context</h3>
+		<sdpi-item label="Auto-compact">
+			<sdpi-select setting="autoCompactK" global default="">
+				<option value="">Leave as configured</option>
+				<option value="auto">Claude Code default</option>
+				<option value="100">at 100k tokens</option>
+				<option value="150">at 150k tokens</option>
+				<option value="200">at 200k tokens</option>
+				<option value="300">at 300k tokens</option>
+				<option value="500">at 500k tokens</option>
+			</sdpi-select>
+		</sdpi-item>
+		<div class="hint">
+			Sets Claude Code's own <code>autoCompactWindow</code>, so it compacts by itself once a conversation reaches
+			that size — earlier compaction keeps long sessions fast and cheap. The <strong>Context</strong> key fills up
+			against this threshold. Written into the same <code>settings.json</code> as the hooks; "Leave as configured"
+			never touches it.
+		</div>
+
+		<sdpi-item label="Plan limits">
+			<sdpi-checkbox setting="planLimits" global default="true" label="Read 5-hour and weekly limits"></sdpi-checkbox>
+		</sdpi-item>
+		<div class="hint">
+			Claude Code reports plan usage only to its status line. Claude Deck puts a small relay there that passes the
+			data to the deck and then runs your own status line exactly as before. Unticking restores your status line.
+		</div>
+
 		<h3>Bridge</h3>
 		<sdpi-item label="Port">
 			<sdpi-textfield setting="port" global default="38274" type="number"></sdpi-textfield>

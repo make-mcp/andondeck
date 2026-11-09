@@ -7,15 +7,40 @@ import {
 import type { JsonObject } from "@elgato/utils";
 
 import { DeckAction, animationPhase, type AnyAction, type SessionScoped } from "./base.js";
+import { permanentRule } from "../bridge/server.js";
+import type { PendingPermission } from "../bridge/types.js";
 import { runtime } from "../runtime.js";
 import { duration, tile } from "../ui/render.js";
 
 type ApproveSettings = SessionScoped & {
-	/** What this key answers with. */
-	verdict?: "allow" | "deny";
+	/** What this key answers with; `always` also stores a permanent rule. */
+	verdict?: "allow" | "deny" | "always";
 	/** Require a second press within a few seconds before answering. */
 	confirm?: boolean;
 } & JsonObject;
+
+const LABEL = { allow: "Allow", deny: "Deny", always: "Always" } as const;
+
+/**
+ * What an "always" would actually store, in a few words, so the key never
+ * grants more than the person pressing it can see.
+ */
+function alwaysScope(pending: PendingPermission): string {
+	const first = permanentRule(pending)[0] as
+		| { type?: string; rules?: { toolName?: string; ruleContent?: string }[]; directories?: string[]; mode?: string }
+		| undefined;
+	const rule = first?.rules?.[0];
+	if (rule) {
+		return rule.ruleContent ? `${rule.toolName}(${rule.ruleContent})` : `every ${rule.toolName}`;
+	}
+	if (first?.directories?.length) {
+		return `edits in ${first.directories[0].split(/[\\/]/).pop()}`;
+	}
+	if (first?.mode) {
+		return `mode ${first.mode}`;
+	}
+	return "this once";
+}
 
 /** How long a first press stays armed when confirmation is on. */
 const ARM_WINDOW_MS = 4000;
@@ -51,13 +76,14 @@ export class ApproveAction extends DeckAction<ApproveSettings> {
 
 		const verdict = settings.verdict ?? "allow";
 		const match = runtime.store.firstPending(settings.session);
-		await key.setState(verdict === "allow" ? 0 : 1);
+		const label = LABEL[verdict];
+		await key.setState(verdict === "deny" ? 1 : 0);
 
 		if (!match) {
 			await key.setImage(
 				tile({
 					tone: "offline",
-					headline: verdict === "allow" ? "Allow" : "Deny",
+					headline: label,
 					subtitle: runtime.settings.deckApprovals ? "Nothing to answer" : "Deck approvals off",
 				}),
 			);
@@ -70,14 +96,17 @@ export class ApproveAction extends DeckAction<ApproveSettings> {
 
 		await key.setImage(
 			tile({
-				tone: isArmed ? "waiting" : verdict === "allow" ? "working" : "error",
+				tone: isArmed ? "waiting" : verdict === "deny" ? "error" : verdict === "always" ? "accent" : "working",
 				solid: isArmed,
 				edge: "pulse",
 				phase: animationPhase(),
 				eyebrow: isArmed ? "Press again" : `${pending.toolName}  ${duration(remaining)}`,
-				headline: verdict === "allow" ? "Allow" : "Deny",
+				headline: label,
 				headlineTone: "state",
-				subtitle: pending.summary.replace(`${pending.toolName}: `, "") || session.project,
+				subtitle:
+					verdict === "always"
+						? alwaysScope(pending)
+						: pending.summary.replace(`${pending.toolName}: `, "") || session.project,
 				progress: remaining / Math.max(1, pending.expiresAt - pending.receivedAt),
 			}),
 		);

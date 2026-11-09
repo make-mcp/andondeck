@@ -4,6 +4,7 @@ import { dirname, join } from "node:path";
 
 import { claudeHome, userSettingsPath } from "./env.js";
 import { HELPERS, helperPath, writeHelpers } from "./helpers.js";
+import { shellQuote } from "./locate.js";
 import type { ClaudeLocation } from "./env.js";
 
 /** Marks the hook entries this plugin owns, so they can be removed again cleanly. */
@@ -65,7 +66,64 @@ export type HookInstallOptions = {
 	location: ClaudeLocation;
 	/** Absolute `node` for the idle-wake helper; falls back to a bare `node`. */
 	nodeCommand?: string;
+	/** Tee Claude Code's status line into the bridge, for plan limits. */
+	planLimits?: boolean;
 };
+
+type StatusLine = { type?: string; command?: string; [key: string]: unknown };
+
+function isOurStatusLine(statusLine: unknown): boolean {
+	const command = (statusLine as StatusLine | undefined)?.command;
+	return typeof command === "string" && command.includes("deck-statusline");
+}
+
+/**
+ * The status line that was there before Claude Deck took the slot.
+ *
+ * Recorded once, the first time the slot is taken, in a file beside the
+ * helpers rather than in `settings.json`, where an unknown key would make
+ * Claude Code report the file as invalid.
+ */
+async function originalStatusLine(location: ClaudeLocation, current: unknown): Promise<StatusLine | undefined> {
+	const file = join(location.dataDir, HELPERS.statusLineOriginal);
+
+	if (isOurStatusLine(current)) {
+		try {
+			return (JSON.parse(await readFile(file, "utf8")) as StatusLine | null) ?? undefined;
+		} catch {
+			return undefined;
+		}
+	}
+
+	await mkdir(location.dataDir, { recursive: true });
+	await writeFile(file, `${JSON.stringify(current ?? null)}\n`, "utf8");
+	return (current as StatusLine | undefined) ?? undefined;
+}
+
+/** The command that runs the status line tee, spelled for Claude Code's side. */
+function statusLineCommand(options: HookInstallOptions): string {
+	if (options.location.kind === "wsl" || process.platform !== "win32") {
+		return `sh ${shellQuote(helperPath(options.location, "statusLine"))}`;
+	}
+
+	const script = helperPath(options.location, "statusLineNode").replace(/\\/g, "/");
+	const node = (options.nodeCommand || "node").replace(/\\/g, "/");
+	return `"${node}" "${script}"`;
+}
+
+/** Puts the user's own status line back, or removes the slot if there was none. */
+async function restoreStatusLine(location: ClaudeLocation, settings: ClaudeSettings): Promise<void> {
+	if (!isOurStatusLine(settings.statusLine)) {
+		return;
+	}
+
+	const original = await originalStatusLine(location, settings.statusLine);
+	if (original) {
+		settings.statusLine = original;
+	} else {
+		delete settings.statusLine;
+	}
+}
 
 /**
  * Builds the hook handler the bridge expects for one event.
@@ -202,9 +260,21 @@ export async function installHooks(options: HookInstallOptions): Promise<string>
 
 	// Helpers are always written: the idle-wake hook is optional, but the
 	// Claude runner and the connectivity probe are used by other features.
-	await writeHelpers({ location: options.location, baseUrl: options.baseUrl, token: options.token });
-
 	const settings = stripHooks(await readSettings(path));
+	const original = options.planLimits ? await originalStatusLine(options.location, settings.statusLine) : undefined;
+
+	await writeHelpers({
+		location: options.location,
+		baseUrl: options.baseUrl,
+		token: options.token,
+		statusLineCommand: original?.command,
+	});
+
+	if (options.planLimits) {
+		settings.statusLine = { ...(original ?? {}), type: "command", command: statusLineCommand(options) };
+	} else {
+		await restoreStatusLine(options.location, settings);
+	}
 
 	settings.hooks = { ...(settings.hooks ?? {}) };
 	for (const [event, groups] of Object.entries(buildHooks(options))) {
@@ -220,9 +290,13 @@ export async function installHooks(options: HookInstallOptions): Promise<string>
  * @param settingsPath Settings file to clean; defaults to the user-level one.
  * @returns The path that was written.
  */
-export async function uninstallHooks(settingsPath?: string): Promise<string> {
+export async function uninstallHooks(settingsPath?: string, location?: ClaudeLocation): Promise<string> {
 	const path = settingsPath ?? userSettingsPath();
-	await writeSettings(path, stripHooks(await readSettings(path)));
+	const settings = stripHooks(await readSettings(path));
+	if (location) {
+		await restoreStatusLine(location, settings);
+	}
+	await writeSettings(path, settings);
 	return path;
 }
 
@@ -259,4 +333,37 @@ export async function installedHookUrl(settingsPath: string): Promise<string | u
 export function settingsLocation(): { home: string; settings: string; projects: string } {
 	const home = claudeHome();
 	return { home, settings: userSettingsPath(), projects: join(home, "projects") };
+}
+
+/** Claude Code accepts an auto-compact window in this range, in tokens. */
+export const AUTO_COMPACT_RANGE = { min: 100_000, max: 1_000_000 } as const;
+
+/**
+ * Sets Claude Code's own `autoCompactWindow` setting.
+ *
+ * Claude Code compacts on its own once a conversation reaches this many tokens;
+ * there is no way for a hook to run `/compact`, so steering this threshold is
+ * how the deck makes compaction happen earlier. Out-of-range values are
+ * clamped to what Claude Code accepts.
+ * @param path Settings file.
+ * @param window Tokens, or `"auto"` for Claude Code's tuned default.
+ * @returns The value written.
+ */
+export async function setAutoCompactWindow(path: string, window: number | "auto"): Promise<number | "auto"> {
+	const value =
+		window === "auto" ? "auto" : Math.min(AUTO_COMPACT_RANGE.max, Math.max(AUTO_COMPACT_RANGE.min, Math.round(window)));
+	const settings = await readSettings(path);
+
+	if (settings.autoCompactWindow === value) {
+		return value;
+	}
+
+	settings.autoCompactWindow = value;
+	await writeSettings(path, settings);
+	return value;
+}
+
+/** Whether the status line slot currently runs the Claude Deck relay. */
+export async function statusLineInstalled(settingsPath: string): Promise<boolean> {
+	return isOurStatusLine((await readSettings(settingsPath)).statusLine);
 }

@@ -2,6 +2,7 @@ import { action, type KeyDownEvent } from "@elgato/streamdeck";
 import type { JsonObject } from "@elgato/utils";
 
 import { DeckAction, type AnyAction, type SessionScoped } from "./base.js";
+import { isSlashCommand } from "./prompt.js";
 import { runtime } from "../runtime.js";
 import { keyLabel } from "../bridge/summarize.js";
 import { tile } from "../ui/render.js";
@@ -67,6 +68,11 @@ export class QueuePromptAction extends DeckAction<QueueSettings> {
 
 		if (!prompt) {
 			await this.refuse(ev.action, "Clipboard is empty");
+			return;
+		}
+
+		if (isSlashCommand(prompt)) {
+			await this.refuse(ev.action, "Slash commands only run when typed");
 			return;
 		}
 

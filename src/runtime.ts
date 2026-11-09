@@ -5,7 +5,14 @@ import streamDeck from "@elgato/streamdeck";
 import type { JsonValue } from "@elgato/utils";
 
 import { Bridge } from "./bridge/server.js";
-import { hooksInstalled, installedHookUrl, installHooks, uninstallHooks } from "./claude/hooks.js";
+import {
+	hooksInstalled,
+	installedHookUrl,
+	installHooks,
+	setAutoCompactWindow,
+	statusLineInstalled,
+	uninstallHooks,
+} from "./claude/hooks.js";
 import { helperPath } from "./claude/helpers.js";
 import {
 	detectClaudeLocations,
@@ -43,6 +50,13 @@ export type GlobalSettings = {
 	defaultCwd: string;
 	/** Explicit Claude Code settings.json, for installs the detection cannot find. */
 	settingsOverride: string;
+	/**
+	 * Claude Code's `autoCompactWindow`, in thousands of tokens, or `"auto"`.
+	 * Empty leaves whatever the user configured themselves untouched.
+	 */
+	autoCompactK: string;
+	/** Read plan limits from Claude Code's status line, chaining any existing one. */
+	planLimits: boolean;
 	[key: string]: JsonValue;
 };
 
@@ -59,6 +73,8 @@ const DEFAULTS: GlobalSettings = {
 	distro: "",
 	defaultCwd: "",
 	settingsOverride: "",
+	autoCompactK: "",
+	planLimits: true,
 };
 
 export type RuntimeEvents = {
@@ -160,16 +176,23 @@ class Runtime extends EventEmitter<RuntimeEvents> {
 
 		try {
 			const location = await this.location();
-			const [installed, wanted] = await Promise.all([
+			const [installed, wanted, relay] = await Promise.all([
 				installedHookUrl(location.settingsPath),
 				this.hookBaseUrl(),
+				statusLineInstalled(location.settingsPath),
 			]);
 
-			if (!installed || installed === wanted) {
+			// An install from before plan limits existed, or one where the user
+			// replaced the status line since: bring the relay in line too.
+			const relayStale = relay !== Boolean(this.#settings.planLimits);
+
+			if (!installed || (installed === wanted && !relayStale)) {
 				return undefined;
 			}
 
-			streamDeck.logger.info(`hook url moved from ${installed} to ${wanted}; reinstalling`);
+			streamDeck.logger.info(
+				installed === wanted ? "status line relay out of date; reinstalling" : `hook url moved from ${installed} to ${wanted}; reinstalling`,
+			);
 			await this.connect();
 			return wanted;
 		} catch (error) {
@@ -185,7 +208,20 @@ class Runtime extends EventEmitter<RuntimeEvents> {
 			return;
 		}
 
+		const compactChanged = merged.autoCompactK !== this.#settings.autoCompactK;
+		const limitsChanged = merged.planLimits !== this.#settings.planLimits;
 		this.#settings = merged;
+
+		// The status line relay is written alongside the hooks, so re-run that.
+		if (limitsChanged && this.#settings.hooksInstalled) {
+			await this.connect().catch((error) =>
+				streamDeck.logger.warn(`could not update the status line: ${(error as Error).message}`),
+			);
+		}
+
+		if (compactChanged) {
+			await this.applyAutoCompact();
+		}
 
 		if (this.#bridge) {
 			await this.#bridge.configure({
@@ -290,15 +326,51 @@ class Runtime extends EventEmitter<RuntimeEvents> {
 			deckApprovals: this.#settings.deckApprovals,
 			idleWake: this.#settings.idleWake,
 			location,
-			nodeCommand: this.#settings.idleWake ? await resolveNodeCommand(location) : undefined,
+			nodeCommand:
+				this.#settings.idleWake || this.#settings.planLimits ? await resolveNodeCommand(location) : undefined,
+			planLimits: this.#settings.planLimits,
 		});
 
 		await this.update({ hooksInstalled: true, distro: location.distro ?? this.#settings.distro });
+		await this.applyAutoCompact();
 		return path;
 	}
 
+	/**
+	 * The auto-compact window Claude Code will use, when the deck manages it.
+	 * @returns Tokens, `"auto"`, or `undefined` when the user's own setting stands.
+	 */
+	public autoCompactWindow(): number | "auto" | undefined {
+		const raw = String(this.#settings.autoCompactK ?? "").trim();
+		if (!raw) {
+			return undefined;
+		}
+		if (raw === "auto") {
+			return "auto";
+		}
+		const thousands = Number(raw);
+		return Number.isFinite(thousands) && thousands > 0 ? thousands * 1000 : undefined;
+	}
+
+	/** Writes the chosen auto-compact window into Claude Code's settings. */
+	public async applyAutoCompact(): Promise<void> {
+		const window = this.autoCompactWindow();
+		if (window === undefined || !this.#settings.hooksInstalled) {
+			return;
+		}
+
+		try {
+			const path = (await this.location()).settingsPath;
+			const written = await setAutoCompactWindow(path, window);
+			streamDeck.logger.info(`autoCompactWindow=${written} written to ${path}`);
+		} catch (error) {
+			streamDeck.logger.warn(`could not set autoCompactWindow: ${(error as Error).message}`);
+		}
+	}
+
 	public async disconnect(): Promise<string> {
-		const path = await uninstallHooks((await this.location()).settingsPath);
+		const location = await this.location();
+		const path = await uninstallHooks(location.settingsPath, location);
 		await this.update({ hooksInstalled: false });
 		return path;
 	}

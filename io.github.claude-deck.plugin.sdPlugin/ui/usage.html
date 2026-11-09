@@ -14,6 +14,8 @@
 			<sdpi-select setting="metric" default="turn">
 				<option value="turn">Turn timer</option>
 				<option value="context">Context pressure</option>
+				<option value="plan5h">Plan limit · 5 hours</option>
+				<option value="planWeek">Plan limit · week</option>
 				<option value="tokens">Tokens</option>
 				<option value="tools">Tool calls</option>
 				<option value="busy">Time spent working</option>
@@ -23,5 +25,6 @@
 			<sdpi-select setting="session" datasource="getSessions" placeholder="Active session"></sdpi-select>
 		</sdpi-item>
 		<div class="hint">Token numbers come from the session transcript when the plugin can read it; turns, tool calls and timings always work. Press or rotate to step through the metrics.</div>
+		<div class="hint"><strong>Plan limits</strong> come from Claude Code's status line and exist only for claude.ai subscriptions (Pro, Max, Team). Claude Deck chains itself in front of any status line you already have, which keeps working unchanged. Turn it off under <strong>Connect Claude Code</strong>.</div>
 	</body>
 </html>

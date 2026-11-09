@@ -44,6 +44,11 @@ export type PendingPermission = {
 	toolInput: Record<string, unknown>;
 	summary: string;
 	rule?: string;
+	/**
+	 * The rule changes Claude Code itself would apply for "Yes, and don't ask
+	 * again" — passed back verbatim so the deck's "always" matches the terminal's.
+	 */
+	suggestions?: unknown[];
 	receivedAt: number;
 	expiresAt: number;
 };
@@ -66,6 +71,8 @@ export type SessionUsage = {
 	cacheReadTokens: number;
 	/** Context tokens in use at the last sample, when the transcript could be read. */
 	contextTokens: number;
+	/** Context window size Claude Code itself reports, when the status line is connected. */
+	contextWindow?: number;
 	costUsd: number;
 };
 
@@ -117,6 +124,21 @@ export type SessionState = {
 	/** Tool calls denied since the brake was pulled. */
 	haltedCalls: number;
 	usage: SessionUsage;
+};
+
+/** One plan-limit window as Claude Code reports it to its status line. */
+export type LimitWindow = {
+	/** 0–100. */
+	usedPercent: number;
+	/** Epoch milliseconds. */
+	resetsAt: number;
+};
+
+/** Subscription limits; only present for claude.ai subscribers. */
+export type PlanLimits = {
+	fiveHour?: LimitWindow;
+	sevenDay?: LimitWindow;
+	updatedAt: number;
 };
 
 /** Snapshot of a session that is safe to hand to the property inspector. */

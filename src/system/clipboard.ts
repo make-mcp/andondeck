@@ -39,3 +39,32 @@ export async function readClipboard(): Promise<string | undefined> {
 
 	return undefined;
 }
+
+/**
+ * Puts text on the system clipboard.
+ * @returns Whether it got there.
+ */
+export async function writeClipboard(text: string): Promise<boolean> {
+	const attempts: [string, string[]][] =
+		process.platform === "win32"
+			? [["clip.exe", []]]
+			: process.platform === "darwin"
+				? [["pbcopy", []]]
+				: [
+						["wl-copy", []],
+						["xclip", ["-selection", "clipboard"]],
+						["xsel", ["--clipboard", "--input"]],
+					];
+
+	for (const [command, args] of attempts) {
+		const ok = await new Promise<boolean>((resolve) => {
+			const child = execFile(command, args, { windowsHide: true, timeout: 5000 }, (error) => resolve(!error));
+			child.stdin?.end(text);
+		});
+		if (ok) {
+			return true;
+		}
+	}
+
+	return false;
+}

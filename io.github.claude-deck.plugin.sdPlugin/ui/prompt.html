@@ -28,6 +28,6 @@
 		<sdpi-item label="Session">
 			<sdpi-select setting="session" datasource="getSessions" placeholder="Active session"></sdpi-select>
 		</sdpi-item>
-		<div class="hint">Slash commands work here too: <code>/compact</code>, <code>/review</code>, or any command your project defines.</div>
+		<div class="hint">Plain prompts are queued and fed to Claude when its turn ends. <strong>Slash commands</strong> (<code>/compact</code>, <code>/clear</code>…) cannot be sent that way — Claude Code only runs them when typed at its own prompt. This key copies them to the clipboard instead. For a one-press slash command, use Stream Deck's built-in <strong>Text</strong> action with "Send Enter" while the terminal has focus; the bundled layouts already include <code>/compact</code> and <code>/clear</code> keys built that way.</div>
 	</body>
 </html>

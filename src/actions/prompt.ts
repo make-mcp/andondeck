@@ -4,7 +4,13 @@ import type { JsonObject } from "@elgato/utils";
 import { DeckAction, type AnyAction, type SessionScoped } from "./base.js";
 import { runtime } from "../runtime.js";
 import { keyLabel } from "../bridge/summarize.js";
+import { writeClipboard } from "../system/clipboard.js";
 import { tile } from "../ui/render.js";
+
+/** A Claude Code slash command, which only its own input line can run. */
+export function isSlashCommand(text: string): boolean {
+	return /^\/[a-z][\w:-]*(\s|$)/i.test(text.trim());
+}
 
 type PromptSettings = SessionScoped & {
 	/** Preset id, or `custom` to use {@link PromptSettings.text}. */
@@ -74,7 +80,13 @@ export class PromptAction extends DeckAction<PromptSettings> {
 				tone: text ? "accent" : "offline",
 				eyebrow: glyph,
 				headline: label,
-				subtitle: session ? (session.status === "working" ? "Queues next" : "Sends next") : "No session",
+				subtitle: isSlashCommand(text)
+					? "Copies to paste"
+					: session
+						? session.status === "working"
+							? "Queues next"
+							: "Sends next"
+						: "No session",
 				badge: settings.priority ? "↑" : undefined,
 			}),
 		);
@@ -86,6 +98,15 @@ export class PromptAction extends DeckAction<PromptSettings> {
 
 		if (!text.trim()) {
 			await this.refuse(ev.action, "Set a prompt first");
+			return;
+		}
+
+		// Claude Code only runs slash commands typed at its own prompt. A hook can
+		// hand Claude text, never a command — "/compact" would arrive as a message
+		// about compacting. Say so instead of pretending, and leave it ready to paste.
+		if (isSlashCommand(text)) {
+			const copied = await writeClipboard(text.trim());
+			await this.refuse(ev.action, copied ? `Copied ${text.trim()} — paste it` : "Type it in the terminal");
 			return;
 		}
 

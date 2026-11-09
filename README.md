@@ -40,13 +40,13 @@ is configured with `onFailure: "continue"` — Claude Code behaves exactly as if
 | **Claude Status** | Live state: idle, working, waiting on you, compacting, failed. Shows the current tool, elapsed turn time and the queue count. Press to follow whichever session needs attention. |
 | **Queue Prompt** | Stores a prompt locally and hands it over the moment the current turn ends. Can queue whatever you last copied, so an error message goes from clipboard to Claude in one press. |
 | **Queue Control** | Browse, promote, drop or clear queued prompts. On a Stream Deck +, rotate to scroll. |
-| **Approve / Deny** | Answers Claude Code permission requests from the deck, with an optional confirm-twice guard. |
-| **Prompt / Slash Command** | One-tap prompts and slash commands — `/compact`, `/review`, or anything you write. |
+| **Approve / Deny / Always** | Answers Claude Code permission requests from the deck, with an optional confirm-twice guard. **Always** also saves the same rule Claude Code's own "Yes, and don't ask again" would, and shows that rule on the key before you press it. |
+| **Prompt** | One-tap prompts, queued and fed to Claude when its turn ends. Slash commands cannot travel through a hook — Claude Code only runs them when typed — so the bundled layouts use Stream Deck's built-in **Text** action for `/compact`, which types it into the focused terminal. |
 | **Session Switcher** | Pin which session the deck controls, or cycle through everything that is open. |
 | **Run Task** | A one-shot `claude -p` run in the background. Never touches your open session. |
 | **Session Slot** | Gives one session a key of its own, held for that session's whole life. A row of them is a board of everything running. |
 | **Launch Claude** | Opens a terminal with an interactive session in a folder you choose. |
-| **Usage & Timer** | Turn timer, tool calls, token counts and context pressure. |
+| **Usage & Timer** | Turn timer, tool calls, token counts, context pressure, and **plan limits** (5-hour and weekly, with a reset countdown) for claude.ai subscriptions. |
 | **Autopilot** | Approves tool calls for a set stretch of time, then switches itself back off. |
 | **Stop Claude** | Emergency brake: blocks every further tool call so Claude winds down and reports back. |
 | **Model** | Shows the session's model and switches it at the next turn boundary. |
@@ -65,19 +65,31 @@ everything that comes next, which stops the agent touching anything further and 
 report where it got to. The brake outranks autopilot — arming one cannot defeat the other — and it
 releases itself once the turn ends.
 
+## Auto-compact and plan limits
+
+Under **Connect Claude Code** you can set the point at which Claude Code compacts on its own (it writes
+Claude Code's `autoCompactWindow` setting; "Leave as configured" never touches it). The **Context** key then
+fills up against that threshold.
+
+Plan limits are only reported to Claude Code's status line, so Claude Deck places a small relay there. It
+forwards the snapshot to the deck in the background and then runs the status line you already had,
+unchanged. Unticking **Plan limits**, or removing the hooks, puts your own status line back.
+
 ## Ready-made profiles
 
 Every supported device gets a layout built for its grid rather than cropped from a bigger one — Stream
-Deck, Mini, XL, + (dials wired to the queue, session and usage) and Neo. Pick one under **Profiles → +**
-in the Stream Deck app; nothing is installed or switched automatically.
+Deck, Mini, XL, + (dials wired to the queue, session and usage) and Neo. **Hold the Connect key** for about
+a second to switch to the one for your deck. If Stream Deck has not installed it yet (it does not for a
+developer link), the same hold hands the profile file to Stream Deck, which offers to import it.
 
 Rows are tasks, not categories, because that is how a deck is actually used. On the XL:
 
 ```
-Watch     session 1   session 2   session 3   session 4   timer   context   tokens   tools
-Answer    allow       deny        stop        autopilot   all     model     session  status
-Queue     run tests   review      commit      docs        paste   promote   drop     clear
-Start     project 1   project 2   review diff today       compact continue  ·        connect
+Watch     session 1   session 2   session 3   session 4   timer    context  5h limit  week limit
+Answer    allow       always      deny        stop        autopilot model   session   status
+Queue     run tests   review      commit      docs        paste    promote  drop      clear
+Start     project 1   project 2   review diff today       /compact continue autopilot connect
+                                                                            (all)
 ```
 
 Reading along a row is how you work; reading down a column means nothing, so nothing is arranged that way.

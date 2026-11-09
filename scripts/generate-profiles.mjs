@@ -5,11 +5,29 @@
  * a working control surface on first launch, so each supported device gets a
  * layout designed for its grid rather than a cropped version of a bigger one.
  */
-import { mkdir, writeFile } from "node:fs/promises";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
+import sharp from "sharp";
+
 import { makeZip } from "./lib/zip.mjs";
+
+/**
+ * Key art for a typed slash command, in the plugin's own tile style so the
+ * native keys do not look borrowed.
+ */
+async function typedArtwork({ command, label }) {
+	const font = "'Segoe UI','DejaVu Sans',sans-serif";
+	const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="144" height="144" viewBox="0 0 72 72">
+		<rect width="72" height="72" fill="#201E1C"/>
+		<rect x="1" y="1" width="70" height="70" rx="8" fill="none" stroke="#B9B2A8" stroke-opacity=".55" stroke-width="2"/>
+		<text x="36" y="21" font-family="${font}" font-size="9" font-weight="600" fill="#948E86" text-anchor="middle">TYPES</text>
+		<text x="36" y="42" font-family="${font}" font-size="${Math.min(14, 58 / (0.72 * command.length)).toFixed(1)}" font-weight="700" fill="#F2EFEA" text-anchor="middle">${command}</text>
+		<text x="36" y="58" font-family="${font}" font-size="9" fill="#948E86" text-anchor="middle">${label}</text>
+	</svg>`;
+	return sharp(Buffer.from(svg)).png().toBuffer();
+}
 
 const PLUGIN = "io.github.claude-deck.plugin";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
@@ -52,9 +70,13 @@ const STATE_COUNT = {
  */
 function key(uuid, name, settings = {}) {
 	const states = Array.from({ length: STATE_COUNT[uuid] ?? 1 }, () => ({
+		FontFamily: "",
 		FontSize: 10,
+		FontStyle: "",
 		FontUnderline: false,
-		Image: "",
+		OutlineThickness: 2,
+		// The plugin draws its own words onto the key; a title would sit on top.
+		ShowTitle: false,
 		TitleAlignment: "bottom",
 		TitleColor: "#ffffff",
 	}));
@@ -77,6 +99,7 @@ const SESSION = key(A.session, "Session", { mode: "cycle" });
 
 const ALLOW = key(A.approve, "Approve", { verdict: "allow" });
 const DENY = key(A.approve, "Deny", { verdict: "deny" });
+const ALWAYS = key(A.approve, "Always allow", { verdict: "always" });
 const HALT = key(A.halt, "Stop Claude", { clearQueue: false });
 const AUTO_SAFE = key(A.autopilot, "Autopilot", { scope: "safe", minutes: 15 });
 const AUTO_ALL = key(A.autopilot, "Autopilot", { scope: "all", minutes: 10 });
@@ -86,12 +109,33 @@ const TIMER = key(A.usage, "Turn timer", { metric: "turn" });
 const CONTEXT = key(A.usage, "Context", { metric: "context" });
 const TOKENS = key(A.usage, "Tokens", { metric: "tokens" });
 const TOOLS = key(A.usage, "Tool calls", { metric: "tools" });
+const PLAN_5H = key(A.usage, "5h limit", { metric: "plan5h" });
+const PLAN_WEEK = key(A.usage, "Week limit", { metric: "planWeek" });
 
 const PROMOTE = key(A.queueControl, "Promote", { mode: "browse" });
 const DROP = key(A.queueControl, "Drop next", { mode: "drop-next" });
 const CLEAR = key(A.queueControl, "Clear queue", { mode: "clear" });
 
-const COMPACT = key(A.prompt, "Compact", { preset: "compact" });
+/**
+ * A key that types a slash command into the focused terminal.
+ *
+ * Claude Code runs slash commands only from its own input line — no hook can
+ * trigger one — so these use Stream Deck's built-in Text action rather than
+ * this plugin. Settings mirror what Stream Deck itself writes for that action.
+ */
+const TEXT_PLUGIN = { Name: "Text", UUID: "com.elgato.streamdeck.system.text", Version: "1.0" };
+const typed = (command, label) => ({
+	...key(TEXT_PLUGIN.UUID, "Text", {
+		Hotkey: { KeyModifiers: 0, QTKeyCode: 33554431, VKeyCode: -1 },
+		isSendingEnter: true,
+		isTypingMode: true,
+		pastedText: command,
+	}),
+	Plugin: TEXT_PLUGIN,
+	artwork: { command, label },
+});
+
+const COMPACT = typed("/compact", "Compact");
 const CONTINUE = key(A.prompt, "Continue", { preset: "continue" });
 
 // Launchers ship without a folder; the key says so until one is set.
@@ -141,7 +185,7 @@ const DEVICES = [
 			{
 				Type: "Keypad",
 				Actions: grid([
-					[SLOT(1), SLOT(2), SLOT(3), TIMER, CONTEXT],
+					[SLOT(1), SLOT(2), SLOT(3), CONTEXT, PLAN_5H],
 					[ALLOW, DENY, HALT, AUTO_SAFE, MODEL],
 					[Q_TESTS, CLEAR, LAUNCH("Project"), COMPACT, SETUP],
 				]),
@@ -170,10 +214,10 @@ const DEVICES = [
 			{
 				Type: "Keypad",
 				Actions: grid([
-					[SLOT(1), SLOT(2), SLOT(3), SLOT(4), TIMER, CONTEXT, TOKENS, TOOLS],
-					[ALLOW, DENY, HALT, AUTO_SAFE, AUTO_ALL, MODEL, SESSION, STATUS],
+					[SLOT(1), SLOT(2), SLOT(3), SLOT(4), TIMER, CONTEXT, PLAN_5H, PLAN_WEEK],
+					[ALLOW, ALWAYS, DENY, HALT, AUTO_SAFE, MODEL, SESSION, STATUS],
 					[Q_TESTS, Q_REVIEW, Q_COMMIT, Q_DOCS, Q_CLIP, PROMOTE, DROP, CLEAR],
-					[LAUNCH("Project 1"), LAUNCH("Project 2"), RUN_REVIEW, RUN_TODAY, COMPACT, CONTINUE, null, SETUP],
+					[LAUNCH("Project 1"), LAUNCH("Project 2"), RUN_REVIEW, RUN_TODAY, COMPACT, CONTINUE, AUTO_ALL, SETUP],
 				]),
 			},
 		],
@@ -201,7 +245,6 @@ const DEVICES = [
 		deviceType: 9,
 		model: "20GBJ9901",
 		controllers: [
-			{ Type: "Neo", Actions: {} },
 			{
 				Type: "Keypad",
 				Actions: grid([
@@ -234,30 +277,94 @@ function asUuid(hex) {
 
 await mkdir(outDir, { recursive: true });
 
+const manifestPath = join(root, `${PLUGIN}.sdPlugin`, "manifest.json");
+const manifest = JSON.parse(await readFile(manifestPath, "utf8"));
+const plugin = { Name: manifest.Name, UUID: PLUGIN, Version: manifest.Version };
+
+/**
+ * Stream Deck 7 profile format ("ProfilesV3").
+ *
+ * The layout is copied from a bundled profile that Stream Deck 7.4 demonstrably
+ * installed on a real deck: a `package.json` at the root, the profile under
+ * `Profiles/`, page folders named by UUID, an empty default page beside the
+ * real one, and a per-key `ActionID` plus `Plugin` block. The older 6.x layout
+ * this generator used to write was silently ignored.
+ */
 for (const device of DEVICES) {
-	const profileId = asUuid(await stableId(`${PLUGIN}:${device.name}:profile`, 32));
-	const pageId = asUuid(await stableId(`${PLUGIN}:${device.name}:page`, 32));
-	const pageDir = await stableId(`${PLUGIN}:${device.name}:dir`, 26);
-	const base = `${profileId}.sdProfile`;
+	const id = async (what) => asUuid(await stableId(`${PLUGIN}:${device.name}:${what}`, 32));
+	const profileId = await id("profile");
+	const pageId = await id("page");
+	const defaultPageId = await id("default-page");
+	const base = `Profiles/${profileId}.sdProfile`;
 
 	const outer = {
-		Device: { Model: device.model, UUID: "" },
-		InstalledByPluginUUID: PLUGIN,
+		Device: { Model: device.model, UUID: (await id("device")).toLowerCase() },
 		Name: device.name,
-		Pages: { Current: pageId, Pages: [pageId] },
-		PreconfiguredName: device.name,
-		Version: "2.0",
+		Pages: {
+			Current: "00000000-0000-0000-0000-000000000000",
+			Default: defaultPageId.toLowerCase(),
+			Pages: [pageId.toLowerCase()],
+		},
+		Version: "3.0",
 	};
 
-	const page = { Controllers: device.controllers };
+	const images = [];
+	const withIds = async (controller) => {
+		const actions = {};
+		for (const [coordinates, entry] of Object.entries(controller.Actions)) {
+			let states = entry.States;
+			if (entry.artwork) {
+				const file = `${await stableId(`${device.name}:${coordinates}:image`, 27)}.png`;
+				images.push({ path: `${base}/Profiles/${pageId}/Images/${file}`, data: await typedArtwork(entry.artwork) });
+				states = states.map((state) => ({ ...state, Image: `Images/${file}` }));
+			}
+
+			actions[coordinates] = {
+				ActionID: (await id(`action:${controller.Type}:${coordinates}`)).toLowerCase(),
+				LinkedTitle: true,
+				Name: entry.Name,
+				Plugin: entry.Plugin ?? plugin,
+				Resources: null,
+				Settings: entry.Settings,
+				State: entry.State,
+				States: states,
+				UUID: entry.UUID,
+			};
+		}
+		return { Actions: Object.keys(actions).length ? actions : null, Type: controller.Type };
+	};
+
+	const page = { Controllers: await Promise.all(device.controllers.map(withIds)), Icon: "", Name: "" };
+	const blank = {
+		Controllers: device.controllers.map((controller) => ({ Actions: null, Type: controller.Type })),
+		Icon: "",
+		Name: "",
+	};
+
+	const packageInfo = {
+		AppVersion: "7.0.0.0",
+		DeviceModel: device.model,
+		DeviceSettings: null,
+		FormatVersion: 1,
+		OSType: "Windows",
+		OSVersion: "10.0.0",
+		RequiredPlugins: [PLUGIN, ...(images.length ? [TEXT_PLUGIN.UUID] : [])],
+	};
 
 	const zip = makeZip([
+		{ path: "Profiles/" },
 		{ path: `${base}/` },
-		{ path: `${base}/manifest.json`, data: JSON.stringify(outer, null, 2) },
+		{ path: `${base}/Images/` },
 		{ path: `${base}/Profiles/` },
-		{ path: `${base}/Profiles/${pageDir}/` },
-		{ path: `${base}/Profiles/${pageDir}/Images/` },
-		{ path: `${base}/Profiles/${pageDir}/manifest.json`, data: JSON.stringify(page, null, 2) },
+		{ path: `${base}/Profiles/${defaultPageId}/` },
+		{ path: `${base}/Profiles/${defaultPageId}/Images/` },
+		{ path: `${base}/Profiles/${pageId}/` },
+		{ path: `${base}/Profiles/${pageId}/Images/` },
+		{ path: "package.json", data: JSON.stringify(packageInfo) },
+		{ path: `${base}/manifest.json`, data: JSON.stringify(outer) },
+		{ path: `${base}/Profiles/${defaultPageId}/manifest.json`, data: JSON.stringify(blank) },
+		{ path: `${base}/Profiles/${pageId}/manifest.json`, data: JSON.stringify(page) },
+		...images,
 	]);
 
 	await writeFile(join(outDir, `${device.name}.streamDeckProfile`), zip);
@@ -266,8 +373,6 @@ for (const device of DEVICES) {
 }
 
 // Keep the manifest's Profiles list in step with what was generated.
-const manifestPath = join(root, `${PLUGIN}.sdPlugin`, "manifest.json");
-const manifest = JSON.parse(await (await import("node:fs/promises")).readFile(manifestPath, "utf8"));
 manifest.Profiles = DEVICES.map((device) => ({
 	Name: device.name,
 	DeviceType: device.deviceType,

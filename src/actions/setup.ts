@@ -1,3 +1,5 @@
+import { join } from "node:path";
+
 import streamDeck, {
 	action,
 	type KeyDownEvent,
@@ -8,7 +10,19 @@ import type { JsonObject, JsonValue } from "@elgato/utils";
 
 import { DeckAction, type AnyAction } from "./base.js";
 import { runtime } from "../runtime.js";
+import { openWithSystem, pluginDir } from "../system/open.js";
 import { tile } from "../ui/render.js";
+
+/** This plugin's actions currently on screen on one deck, by manifest id. */
+function visibleOn(deviceId: string): Map<string, number> {
+	const seen = new Map<string, number>();
+	for (const action of streamDeck.actions) {
+		if (action.device.id === deviceId) {
+			seen.set(action.manifestId, (seen.get(action.manifestId) ?? 0) + 1);
+		}
+	}
+	return seen;
+}
 
 type SetupSettings = JsonObject;
 
@@ -126,11 +140,18 @@ export class SetupAction extends DeckAction<SetupSettings> {
 	}
 
 	/**
-	 * Switches every connected deck to the layout built for it.
-	 * @returns How many decks were switched.
+	 * Gets every connected deck onto the layout built for it.
+	 *
+	 * Asks Stream Deck to switch first. That only works when Stream Deck has
+	 * installed the bundled profile, which it does on a real plugin install but
+	 * not reliably for a developer link — and the switch fails silently when the
+	 * profile is missing. So the result is checked: if the deck does not repaint
+	 * with this plugin's keys, the profile file is handed to Stream Deck to
+	 * import instead, which works however the plugin got there.
+	 * @returns How many decks were switched or offered an import.
 	 */
 	async #useProfile(): Promise<number> {
-		let switched = 0;
+		let handled = 0;
 
 		for (const device of streamDeck.devices) {
 			const profile = PROFILE_FOR_DEVICE[device.type as number];
@@ -140,15 +161,31 @@ export class SetupAction extends DeckAction<SetupSettings> {
 				continue;
 			}
 
+			const before = visibleOn(device.id);
 			try {
 				await streamDeck.profiles.switchToProfile(device.id, profile);
-				switched += 1;
 			} catch (error) {
 				streamDeck.logger.error(`switchToProfile failed: ${(error as Error).message}`);
 			}
+
+			await new Promise((resolve) => setTimeout(resolve, 1500));
+			const after = visibleOn(device.id);
+			streamDeck.logger.info(`profile switch: ${before.size} → ${after.size} visible keys`);
+
+			if (after.size > before.size || after.has("io.github.claude-deck.plugin.slot")) {
+				handled += 1;
+				continue;
+			}
+
+			const file = join(pluginDir(), `${profile}.streamDeckProfile`);
+			const failed = openWithSystem(file);
+			streamDeck.logger.info(failed ? `profile import failed: ${failed}` : `profile offered for import: ${file}`);
+			if (!failed) {
+				handled += 1;
+			}
 		}
 
-		return switched;
+		return handled;
 	}
 
 	override async onSendToPlugin(ev: SendToPluginEvent<JsonValue, SetupSettings>): Promise<void> {

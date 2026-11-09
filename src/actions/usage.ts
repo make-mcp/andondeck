@@ -14,13 +14,13 @@ import { runtime } from "../runtime.js";
 import { compactNumber, duration, tile } from "../ui/render.js";
 import type { SessionState } from "../bridge/types.js";
 
-type Metric = "turn" | "context" | "tokens" | "tools" | "busy";
+type Metric = "turn" | "context" | "tokens" | "tools" | "busy" | "plan5h" | "planWeek";
 
 type UsageSettings = SessionScoped & {
 	metric?: Metric;
 } & JsonObject;
 
-const ORDER: Metric[] = ["turn", "context", "tokens", "tools", "busy"];
+const ORDER: Metric[] = ["turn", "context", "plan5h", "planWeek", "tokens", "tools", "busy"];
 
 /**
  * Context window sizes the deck draws the pressure bar against.
@@ -36,6 +36,54 @@ const CONTEXT_WINDOWS: { match: RegExp; size: number }[] = [
 
 function contextWindow(model?: string): number {
 	return CONTEXT_WINDOWS.find((entry) => entry.match.test(model ?? ""))?.size ?? 200_000;
+}
+
+/** A reset countdown short enough for a key: `2d 4h`, `3h 12m`, `12m`. */
+export function resetIn(ms: number): string {
+	const minutes = Math.max(1, Math.ceil(ms / 60_000));
+	const days = Math.floor(minutes / 1440);
+	const hours = Math.floor((minutes % 1440) / 60);
+	if (days > 0) {
+		return `${days}d ${hours}h`;
+	}
+	return hours > 0 ? `${hours}h ${minutes % 60}m` : `${minutes}m`;
+}
+
+/**
+ * A plan-limit window: how much is used and when it resets.
+ *
+ * Claude Code only reports these to its status line, and only for claude.ai
+ * subscribers; the key says which of those is missing rather than showing 0%.
+ */
+function planView(metric: "plan5h" | "planWeek"): {
+	title: string;
+	value: string;
+	subtitle: string;
+	tone: TileTone;
+	progress: number | undefined;
+} {
+	const title = metric === "plan5h" ? "5h limit" : "Week limit";
+	const limits = runtime.bridge.planLimits;
+	const window = metric === "plan5h" ? limits?.fiveHour : limits?.sevenDay;
+
+	if (!window || window.resetsAt <= Date.now()) {
+		return {
+			title,
+			value: "—",
+			subtitle: !runtime.settings.planLimits ? "Turned off" : limits ? "Window reset" : "Waiting for Claude",
+			tone: "offline",
+			progress: undefined,
+		};
+	}
+
+	const used = Math.max(0, Math.min(100, window.usedPercent));
+	return {
+		title,
+		value: `${Math.round(used)}%`,
+		subtitle: `resets ${resetIn(window.resetsAt - Date.now())}`,
+		tone: used >= 90 ? "error" : used >= 70 ? "waiting" : "working",
+		progress: used / 100,
+	};
 }
 
 /** Metric currently shown, per action context, when the dial steps through them. */
@@ -95,6 +143,11 @@ export class UsageAction extends DeckAction<UsageSettings> {
 		tone: TileTone;
 		progress: number | undefined;
 	} {
+		// Plan limits belong to the account, not a session, so they show without one.
+		if (metric === "plan5h" || metric === "planWeek") {
+			return planView(metric);
+		}
+
 		if (!session) {
 			return { title: "Claude", value: "—", subtitle: "No session", tone: "offline", progress: undefined };
 		}
@@ -103,10 +156,16 @@ export class UsageAction extends DeckAction<UsageSettings> {
 
 		switch (metric) {
 			case "context": {
-				const window = contextWindow(session.model);
+				// With a managed auto-compact threshold, "full" means "about to
+				// compact", which is the number worth watching.
+				const compactAt = runtime.autoCompactWindow();
+				const window = Math.min(
+					usage.contextWindow ?? contextWindow(session.model),
+					typeof compactAt === "number" ? compactAt : Infinity,
+				);
 				const ratio = usage.contextTokens / window;
 				return {
-					title: "Context",
+					title: typeof compactAt === "number" ? "To compact" : "Context",
 					value: usage.contextTokens ? `${Math.round(ratio * 100)}%` : "—",
 					subtitle: usage.contextTokens ? `${compactNumber(usage.contextTokens)} / ${compactNumber(window)}` : "unknown",
 					tone: ratio > 0.85 ? "error" : ratio > 0.6 ? "working" : "idle",
