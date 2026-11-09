@@ -1,7 +1,7 @@
 {
 	"$schema": "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
 	"Name": "Andon Deck for Claude Code",
-	"Version": "0.4.1.0",
+	"Version": "1.0.0.0",
 	"Author": "claude-deck contributors",
 	"Description": "Control Claude Code from your Stream Deck. Every key's border shows Claude's state the way a factory andon light does: working, waiting for you, or stopped. Live status, prompt queueing, permission approvals, plan limits and usage history, and a full-deck alert when Claude needs you — free and open source.",
 	"Category": "Andon Deck for Claude Code",
