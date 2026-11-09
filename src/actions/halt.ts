@@ -64,6 +64,11 @@ export class HaltAction extends DeckAction<HaltSettings> {
 
 		if (session.haltedAt) {
 			runtime.bridge.resume(session);
+		} else if (session.status !== "working") {
+			// The brake lasts until the turn ends. Armed between turns, it would
+			// silently block every tool of the next prompt instead.
+			await this.refuse(ev.action, "Nothing running");
+			return;
 		} else {
 			runtime.bridge.halt(session);
 

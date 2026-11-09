@@ -3,6 +3,8 @@ import { readFile } from "node:fs/promises";
 import { inflateRawSync } from "node:zlib";
 import { describe, it } from "node:test";
 
+import { PROFILE_FOR_DEVICE } from "../.test-build/profiles.js";
+
 const DIR = new URL("../io.github.claude-deck.plugin.sdPlugin/", import.meta.url);
 
 /** Reads every file from a ZIP archive (stored or deflated). */
@@ -34,6 +36,13 @@ describe("bundled profiles", () => {
 		assert.deepEqual(
 			manifest.Profiles.map((p) => p.DeviceType).sort((a, b) => a - b),
 			Object.keys(GRIDS).map(Number),
+		);
+	});
+
+	it("can switch to every bundled profile from the Connect key", () => {
+		assert.deepEqual(
+			Object.fromEntries(manifest.Profiles.map((p) => [p.DeviceType, p.Name])),
+			Object.fromEntries(Object.entries(PROFILE_FOR_DEVICE).map(([type, name]) => [Number(type), name])),
 		);
 	});
 

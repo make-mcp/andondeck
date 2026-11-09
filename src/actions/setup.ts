@@ -9,6 +9,7 @@ import streamDeck, {
 import type { JsonObject, JsonValue } from "@elgato/utils";
 
 import { DeckAction, type AnyAction } from "./base.js";
+import { PROFILE_FOR_DEVICE } from "../profiles.js";
 import { runtime } from "../runtime.js";
 import { openWithSystem, pluginDir } from "../system/open.js";
 import { tile } from "../ui/render.js";
@@ -29,25 +30,6 @@ type SetupSettings = JsonObject;
 /** `sdpi-button invoke="…"` posts its action name as `event`. */
 type SetupMessage = {
 	event?: "connect" | "disconnect" | "diagnostics" | "useProfile";
-};
-
-/**
- * The bundled profile for each device type, keyed by Stream Deck's own numbers.
- *
- * Installing a profile is not the same as landing on it, and a profile the user
- * cannot find is the same as no profile at all — so the setup can switch to it
- * directly.
- */
-const PROFILE_FOR_DEVICE: Record<number, string> = {
-	0: "Claude Deck",
-	1: "Claude Deck Mini",
-	2: "Claude Deck XL",
-	5: "Claude Deck Pedal",
-	7: "Claude Deck Plus",
-	9: "Claude Deck Neo",
-	10: "Claude Deck Studio",
-	12: "Claude Deck Galleon",
-	13: "Claude Deck Plus XL",
 };
 
 /** Hold the key at least this long to ask for the bundled layout. */
@@ -155,6 +137,12 @@ export class SetupAction extends DeckAction<SetupSettings> {
 	 * with this plugin's keys, the profile file is handed to Stream Deck to
 	 * import instead, which works however the plugin got there.
 	 * @returns How many decks were switched or offered an import.
+	 */
+	/**
+	 * Switches every connected deck to its bundled profile.
+	 *
+	 * Installing a profile is not the same as landing on it, and a profile the
+	 * user cannot find is the same as no profile at all.
 	 */
 	async #useProfile(): Promise<number> {
 		let handled = 0;

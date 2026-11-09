@@ -158,8 +158,17 @@ function historyView(metric: "today" | "week"): View {
 	};
 }
 
-/** Metric currently shown, per action context, when the dial steps through them. */
-const cursors = new Map<string, number>();
+/**
+ * Steps away from the configured metric, per action context.
+ *
+ * A key falls back to its own metric after a while, so a bump never leaves a
+ * "Context" key showing something else for good; a dial was turned on purpose
+ * and stays where it was put.
+ */
+const cursors = new Map<string, { offset: number; at: number }>();
+
+/** How long a key shows a stepped-to metric before returning to its own. */
+const STEP_LINGER_MS = 10_000;
 
 /** Touch-strip layout each dial currently has, so it is only switched when it changes. */
 const layouts = new Map<string, string>();
@@ -177,7 +186,7 @@ const CHART_LAYOUT = "layouts/chart.json";
 export class UsageAction extends DeckAction<UsageSettings> {
 	protected override async draw(unit: AnyAction<UsageSettings>, settings: UsageSettings): Promise<void> {
 		const session = runtime.store.resolve(settings.session);
-		const metric = this.#metric(unit.id, settings);
+		const metric = this.#metric(unit, settings);
 		const view = this.#view(session, metric);
 
 		if (unit.isDial()) {
@@ -223,13 +232,19 @@ export class UsageAction extends DeckAction<UsageSettings> {
 		);
 	}
 
-	#metric(context: string, settings: UsageSettings): Metric {
-		if (settings.metric && settings.metric !== "turn") {
-			return settings.metric;
+	#metric(unit: AnyAction<UsageSettings>, settings: UsageSettings): Metric {
+		const own = settings.metric && ORDER.includes(settings.metric) ? settings.metric : "turn";
+		const stepped = cursors.get(unit.id);
+		if (!stepped) {
+			return own;
+		}
+		if (unit.isKey() && Date.now() - stepped.at > STEP_LINGER_MS) {
+			cursors.delete(unit.id);
+			return own;
 		}
 
-		const stepped = cursors.get(context);
-		return stepped === undefined ? (settings.metric ?? "turn") : ORDER[((stepped % ORDER.length) + ORDER.length) % ORDER.length];
+		const index = ORDER.indexOf(own) + stepped.offset;
+		return ORDER[((index % ORDER.length) + ORDER.length) % ORDER.length];
 	}
 
 	/** Turns a metric into something that fits on a key or a dial readout. */
@@ -314,10 +329,11 @@ export class UsageAction extends DeckAction<UsageSettings> {
 	protected override onDisappear(ev: WillDisappearEvent<UsageSettings>): void {
 		// A dial that comes back starts on the manifest's layout again.
 		layouts.delete(ev.action.id);
+		cursors.delete(ev.action.id);
 	}
 
 	override async onKeyDown(ev: KeyDownEvent<UsageSettings>): Promise<void> {
-		this.#step(ev.action.id, 1);
+		this.#step(ev.action.id, 1, false);
 		await ev.action.showOk();
 	}
 
@@ -336,8 +352,11 @@ export class UsageAction extends DeckAction<UsageSettings> {
 		await this.draw(ev.action as DialAction<UsageSettings>, ev.payload.settings);
 	}
 
-	#step(context: string, by: number): void {
-		cursors.set(context, (cursors.get(context) ?? 0) + by);
+	#step(context: string, by: number, dial = true): void {
+		const current = cursors.get(context);
+		// A key that already fell back starts again from its own metric.
+		const offset = current && (dial || Date.now() - current.at <= STEP_LINGER_MS) ? current.offset : 0;
+		cursors.set(context, { offset: offset + by, at: Date.now() });
 		this.repaint();
 	}
 }
