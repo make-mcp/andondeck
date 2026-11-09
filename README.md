@@ -132,7 +132,7 @@ where you were, and so does answering in the terminal. A turn simply ending does
 
 ### From source
 
-Requires Node.js 20.5+ (24+ recommended) and Stream Deck 6.9+.
+Requires Node.js 20.5+ (24+ recommended) and Stream Deck 7.1+.
 
 ```bash
 git clone https://github.com/make-mcp/andondeck.git

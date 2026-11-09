@@ -80,7 +80,7 @@
   "i2Text": "Connect 键会替你在 Claude Code 中写入 hooks——适用于 Windows、macOS，以及在 WSL 中运行的 Claude Code。你自己的 hooks 和状态栏保持不变。",
   "i3Title": "照常工作",
   "i3Text": "像往常一样启动 Claude Code。设备会自动跟随每个会话，无需为每个项目单独配置。",
-  "req1": "Stream Deck 6.9 或更高版本",
+  "req1": "Stream Deck 7.1 或更高版本",
   "req2": "Windows 10+ 或 macOS 12+",
   "req3": "Claude Code 2.x",
   "req4": "MIT 许可，永久免费",

@@ -80,7 +80,7 @@
   "i2Text": "La touche Connect écrit pour vous les hooks de Claude Code, sous Windows, macOS ou avec Claude Code dans WSL. Vos propres hooks et votre ligne d'état restent tels quels.",
   "i3Title": "Travailler, tout simplement",
   "i3Text": "Lancez Claude Code comme d'habitude. Le deck suit chaque session de lui-même ; rien à configurer par projet.",
-  "req1": "Stream Deck 6.9 ou plus récent",
+  "req1": "Stream Deck 7.1 ou plus récent",
   "req2": "Windows 10+ ou macOS 12+",
   "req3": "Claude Code 2.x",
   "req4": "Licence MIT, gratuit pour toujours",

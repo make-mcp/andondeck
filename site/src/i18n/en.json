@@ -80,7 +80,7 @@
   "i2Text": "The Connect key writes Claude Code's hooks for you – on Windows, macOS, or with Claude Code inside WSL. Your own hooks and status line stay as they are.",
   "i3Title": "Just work",
   "i3Text": "Start Claude Code as usual. The deck follows every session on its own; nothing to configure per project.",
-  "req1": "Stream Deck 6.9 or newer",
+  "req1": "Stream Deck 7.1 or newer",
   "req2": "Windows 10+ or macOS 12+",
   "req3": "Claude Code 2.x",
   "req4": "MIT licensed, free forever",

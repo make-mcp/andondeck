@@ -80,7 +80,7 @@
   "i2Text": "Die Connect-Taste trägt die Hooks in Claude Code für dich ein – unter Windows, macOS oder mit Claude Code in WSL. Deine eigenen Hooks und deine Statuszeile bleiben, wie sie sind.",
   "i3Title": "Einfach arbeiten",
   "i3Text": "Starte Claude Code wie gewohnt. Das Deck folgt jeder Session von selbst; pro Projekt ist nichts einzustellen.",
-  "req1": "Stream Deck 6.9 oder neuer",
+  "req1": "Stream Deck 7.1 oder neuer",
   "req2": "Windows 10+ oder macOS 12+",
   "req3": "Claude Code 2.x",
   "req4": "MIT-Lizenz, dauerhaft kostenlos",

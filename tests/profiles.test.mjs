@@ -31,6 +31,19 @@ const manifest = JSON.parse(await readFile(new URL("manifest.json", DIR), "utf8"
 // Mobile is checked against the 5 x 3 grid it starts with, Virtual against its 8 x 8 maximum.
 const GRIDS = { 0: [5, 3], 1: [3, 2], 2: [8, 4], 3: [5, 3], 5: [3, 1], 7: [4, 2], 9: [4, 2], 10: [16, 2], 11: [8, 8], 12: [3, 4], 13: [9, 4] };
 
+describe("manifest", () => {
+	it("asks for the Stream Deck version the SDK needs, or the plugin dies on connect", async () => {
+		// SDK 3 refuses to connect on a manifest below 7.1 — the plugin crashes in a
+		// restart loop and the deck shows only static images. Nothing else catches it.
+		const sdk = JSON.parse(await readFile(new URL("../node_modules/@elgato/streamdeck/package.json", import.meta.url), "utf8"));
+		const major = Number(sdk.version.split(".")[0]);
+		const [maj, min] = manifest.Software.MinimumVersion.split(".").map(Number);
+		if (major >= 3) {
+			assert.ok(maj > 7 || (maj === 7 && min >= 1), `MinimumVersion ${manifest.Software.MinimumVersion} is below 7.1`);
+		}
+	});
+});
+
 describe("bundled profiles", () => {
 	it("covers every Stream Deck with screens or pedals", () => {
 		assert.deepEqual(
