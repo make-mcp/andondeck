@@ -1,6 +1,9 @@
-# Claude Deck
+# Andon Deck for Claude Code
 
 Control [Claude Code](https://claude.com/claude-code) from your Elgato Stream Deck. Free, open source, MIT.
+
+An *andon* is the signal light over a machine on a factory floor: green while it runs, amber when someone is
+needed, red when it stopped — readable from across the hall. Every key here works the same way.
 
 See what Claude is doing, queue the next prompt without interrupting the current turn, answer permission
 requests with one key, switch between projects, fire off background tasks, and keep an eye on context
@@ -12,7 +15,7 @@ pressure — all from the deck.
 ## How it works
 
 Claude Code supports **HTTP hooks**: it POSTs lifecycle events to a URL, and the JSON it gets back is the
-hook's decision. Claude Deck runs that endpoint inside the Stream Deck plugin itself.
+hook's decision. Andon Deck runs that endpoint inside the Stream Deck plugin itself.
 
 ```
 Claude Code                              Stream Deck plugin
@@ -71,7 +74,7 @@ Under **Connect Claude Code** you can set the point at which Claude Code compact
 Claude Code's `autoCompactWindow` setting; "Leave as configured" never touches it). The **Context** key then
 fills up against that threshold.
 
-Plan limits are only reported to Claude Code's status line, so Claude Deck places a small relay there. It
+Plan limits are only reported to Claude Code's status line, so Andon Deck places a small relay there. It
 forwards the snapshot to the deck in the background and then runs the status line you already had,
 unchanged. Unticking **Plan limits**, or removing the hooks, puts your own status line back.
 
@@ -158,7 +161,7 @@ The `Stop` hook can only feed a prompt back into a turn that is **still running*
 Claude is working and it goes in the moment the turn ends — that is the whole trick, and it needs nothing
 else.
 
-Once a session has gone idle there is nothing left to block. For that case Claude Deck can install a small
+Once a session has gone idle there is nothing left to block. For that case Andon Deck can install a small
 generated helper (`~/.claude/claude-deck/idle-wake.mjs`) registered as an async `Stop` hook with
 `asyncRewake`. It long-polls the bridge and exits 2 with your prompt, which wakes Claude back up. It is on
 by default and can be switched off in **Connect Claude Code** → *Idle wake*.
@@ -169,7 +172,7 @@ Without idle wake, a prompt queued against an idle session simply waits until yo
 
 Hooks and `wsl.exe` both spawn commands *without* a login shell, and Ubuntu's `.bashrc` returns early when
 it is not interactive — so a `node` or `claude` installed through nvm, fnm, volta or bun is invisible to a
-bare command name, even though it works perfectly in your own terminal. Claude Deck therefore:
+bare command name, even though it works perfectly in your own terminal. Andon Deck therefore:
 
 - **generates small shell helpers** next to your Claude Code config that locate the executable at run time,
   covering PATH, nvm, fnm, volta, bun, asdf, Homebrew and the native installer;

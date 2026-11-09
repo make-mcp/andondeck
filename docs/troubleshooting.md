@@ -90,7 +90,7 @@ The key reports what went wrong. The usual causes:
 
 ## Removing everything
 
-Press **Remove hooks** on the Connect key. It strips only the entries Claude Deck owns and leaves the rest
+Press **Remove hooks** on the Connect key. It strips only the entries Andon Deck owns and leaves the rest
 of your `settings.json` untouched. A copy of the previous file is kept as `settings.json.claude-deck.bak`.
 
 The generated helper at `~/.claude/claude-deck/idle-wake.mjs` is safe to delete by hand.

@@ -6,7 +6,7 @@ Claude Code's hooks can be `type: "http"`. Claude POSTs the event, and **the JSO
 the hook's decision**. So the Stream Deck plugin does not need to watch files, scrape a terminal or fake
 keystrokes — it just answers.
 
-Everything in Claude Deck follows from that:
+Everything in Andon Deck follows from that:
 
 | Hook | What the bridge answers | Effect |
 | --- | --- | --- |
@@ -66,7 +66,7 @@ That is what makes a single status key useful with four projects open.
 
 ## Permission requests
 
-Holding a `PermissionRequest` open suppresses Claude Code's own terminal prompt — so Claude Deck only does
+Holding a `PermissionRequest` open suppresses Claude Code's own terminal prompt — so Andon Deck only does
 it while an **Approve / Deny** key is actually visible. `Runtime` tracks visible approver contexts and
 flips the bridge's `deckApprovals` flag accordingly. If nothing answers within the timeout, the bridge
 returns `{}` and the terminal dialog appears as normal.

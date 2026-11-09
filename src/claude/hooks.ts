@@ -78,7 +78,7 @@ function isOurStatusLine(statusLine: unknown): boolean {
 }
 
 /**
- * The status line that was there before Claude Deck took the slot.
+ * The status line that was there before Andon Deck took the slot.
  *
  * Recorded once, the first time the slot is taken, in a file beside the
  * helpers rather than in `settings.json`, where an unknown key would make
@@ -149,7 +149,7 @@ function handler(options: HookInstallOptions, timeoutSec: number): HookHandler {
 	};
 }
 
-/** The complete `hooks` fragment Claude Deck owns. */
+/** The complete `hooks` fragment Andon Deck owns. */
 export function buildHooks(options: HookInstallOptions): Record<string, HookGroup[]> {
 	const hooks: Record<string, HookGroup[]> = {};
 
@@ -197,7 +197,7 @@ function isOurs(hook: HookHandler): boolean {
 	);
 }
 
-/** Drops every Claude Deck handler from a settings object, leaving others untouched. */
+/** Drops every Andon Deck handler from a settings object, leaving others untouched. */
 export function stripHooks(settings: ClaudeSettings): ClaudeSettings {
 	if (!settings.hooks) {
 		return settings;
@@ -251,7 +251,7 @@ async function writeSettings(path: string, settings: ClaudeSettings): Promise<vo
 }
 
 /**
- * Installs the Claude Deck hooks into Claude Code's settings.
+ * Installs the Andon Deck hooks into Claude Code's settings.
  * @param options Install options.
  * @returns The path that was written.
  */
@@ -286,7 +286,7 @@ export async function installHooks(options: HookInstallOptions): Promise<string>
 }
 
 /**
- * Removes the Claude Deck hooks again.
+ * Removes the Andon Deck hooks again.
  * @param settingsPath Settings file to clean; defaults to the user-level one.
  * @returns The path that was written.
  */
@@ -300,7 +300,7 @@ export async function uninstallHooks(settingsPath?: string, location?: ClaudeLoc
 	return path;
 }
 
-/** Whether Claude Deck hooks are currently present in the settings file. */
+/** Whether Andon Deck hooks are currently present in the settings file. */
 export async function hooksInstalled(settingsPath?: string): Promise<boolean> {
 	const settings = await readSettings(settingsPath ?? userSettingsPath());
 	return Object.values(settings.hooks ?? {}).some((groups) =>
@@ -311,7 +311,7 @@ export async function hooksInstalled(settingsPath?: string): Promise<boolean> {
 /**
  * Reads back the URL the installed hooks currently point at.
  * @param settingsPath Settings file to inspect.
- * @returns The base URL, or `undefined` when no Claude Deck hook is installed.
+ * @returns The base URL, or `undefined` when no Andon Deck hook is installed.
  */
 export async function installedHookUrl(settingsPath: string): Promise<string | undefined> {
 	const settings = await readSettings(settingsPath).catch(() => ({}) as ClaudeSettings);
@@ -363,7 +363,7 @@ export async function setAutoCompactWindow(path: string, window: number | "auto"
 	return value;
 }
 
-/** Whether the status line slot currently runs the Claude Deck relay. */
+/** Whether the status line slot currently runs the Andon Deck relay. */
 export async function statusLineInstalled(settingsPath: string): Promise<boolean> {
 	return isOurStatusLine((await readSettings(settingsPath)).statusLine);
 }

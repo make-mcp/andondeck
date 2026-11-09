@@ -1,10 +1,10 @@
 {
 	"$schema": "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
-	"Name": "Claude Deck",
+	"Name": "Andon Deck for Claude Code",
 	"Version": "0.4.1.0",
 	"Author": "claude-deck contributors",
-	"Description": "Control Claude Code from your Stream Deck. Live status, prompt queueing, permission approvals, slash commands, session switching and usage — free and open source.",
-	"Category": "Claude Deck",
+	"Description": "Control Claude Code from your Stream Deck. Every key's border shows Claude's state the way a factory andon light does: working, waiting for you, or stopped. Live status, prompt queueing, permission approvals, plan limits and usage history, and a full-deck alert when Claude needs you — free and open source.",
+	"Category": "Andon Deck",
 	"CategoryIcon": "imgs/plugin/category-icon",
 	"Icon": "imgs/plugin/marketplace",
 	"URL": "https://github.com/make-mcp/claude-deck",
@@ -324,7 +324,7 @@
 		{
 			"UUID": "io.github.claude-deck.plugin.setup",
 			"Name": "Connect Claude Code",
-			"Tooltip": "One-time setup: installs the Claude Deck hooks into your Claude Code settings and shows bridge health.",
+			"Tooltip": "One-time setup: installs the Andon Deck hooks into your Claude Code settings and shows bridge health.",
 			"Icon": "imgs/actions/setup/icon",
 			"Controllers": [
 				"Keypad"
@@ -369,147 +369,147 @@
 	],
 	"Profiles": [
 		{
-			"Name": "Claude Deck",
+			"Name": "Andon Deck",
 			"DeviceType": 0,
 			"Readonly": false,
 			"DontAutoSwitchWhenInstalled": true,
 			"AutoInstall": true
 		},
 		{
-			"Name": "Claude Deck Mini",
+			"Name": "Andon Deck Mini",
 			"DeviceType": 1,
 			"Readonly": false,
 			"DontAutoSwitchWhenInstalled": true,
 			"AutoInstall": true
 		},
 		{
-			"Name": "Claude Deck XL",
+			"Name": "Andon Deck XL",
 			"DeviceType": 2,
 			"Readonly": false,
 			"DontAutoSwitchWhenInstalled": true,
 			"AutoInstall": true
 		},
 		{
-			"Name": "Claude Deck Plus",
+			"Name": "Andon Deck Plus",
 			"DeviceType": 7,
 			"Readonly": false,
 			"DontAutoSwitchWhenInstalled": true,
 			"AutoInstall": true
 		},
 		{
-			"Name": "Claude Deck Plus XL",
+			"Name": "Andon Deck Plus XL",
 			"DeviceType": 13,
 			"Readonly": false,
 			"DontAutoSwitchWhenInstalled": true,
 			"AutoInstall": true
 		},
 		{
-			"Name": "Claude Deck Galleon",
+			"Name": "Andon Deck Galleon",
 			"DeviceType": 12,
 			"Readonly": false,
 			"DontAutoSwitchWhenInstalled": true,
 			"AutoInstall": true
 		},
 		{
-			"Name": "Claude Deck Studio",
+			"Name": "Andon Deck Studio",
 			"DeviceType": 10,
 			"Readonly": false,
 			"DontAutoSwitchWhenInstalled": true,
 			"AutoInstall": true
 		},
 		{
-			"Name": "Claude Deck Pedal",
+			"Name": "Andon Deck Pedal",
 			"DeviceType": 5,
 			"Readonly": false,
 			"DontAutoSwitchWhenInstalled": true,
 			"AutoInstall": true
 		},
 		{
-			"Name": "Claude Deck Neo",
+			"Name": "Andon Deck Neo",
 			"DeviceType": 9,
 			"Readonly": false,
 			"DontAutoSwitchWhenInstalled": true,
 			"AutoInstall": true
 		},
 		{
-			"Name": "Claude Deck Mobile",
+			"Name": "Andon Deck Mobile",
 			"DeviceType": 3,
 			"Readonly": false,
 			"DontAutoSwitchWhenInstalled": true,
 			"AutoInstall": true
 		},
 		{
-			"Name": "Claude Deck Virtual",
+			"Name": "Andon Deck Virtual",
 			"DeviceType": 11,
 			"Readonly": false,
 			"DontAutoSwitchWhenInstalled": true,
 			"AutoInstall": true
 		},
 		{
-			"Name": "Claude Deck Alert",
+			"Name": "Andon Deck Alert",
 			"DeviceType": 0,
 			"Readonly": false,
 			"DontAutoSwitchWhenInstalled": true,
 			"AutoInstall": true
 		},
 		{
-			"Name": "Claude Deck Mini Alert",
+			"Name": "Andon Deck Mini Alert",
 			"DeviceType": 1,
 			"Readonly": false,
 			"DontAutoSwitchWhenInstalled": true,
 			"AutoInstall": true
 		},
 		{
-			"Name": "Claude Deck XL Alert",
+			"Name": "Andon Deck XL Alert",
 			"DeviceType": 2,
 			"Readonly": false,
 			"DontAutoSwitchWhenInstalled": true,
 			"AutoInstall": true
 		},
 		{
-			"Name": "Claude Deck Plus Alert",
+			"Name": "Andon Deck Plus Alert",
 			"DeviceType": 7,
 			"Readonly": false,
 			"DontAutoSwitchWhenInstalled": true,
 			"AutoInstall": true
 		},
 		{
-			"Name": "Claude Deck Plus XL Alert",
+			"Name": "Andon Deck Plus XL Alert",
 			"DeviceType": 13,
 			"Readonly": false,
 			"DontAutoSwitchWhenInstalled": true,
 			"AutoInstall": true
 		},
 		{
-			"Name": "Claude Deck Galleon Alert",
+			"Name": "Andon Deck Galleon Alert",
 			"DeviceType": 12,
 			"Readonly": false,
 			"DontAutoSwitchWhenInstalled": true,
 			"AutoInstall": true
 		},
 		{
-			"Name": "Claude Deck Studio Alert",
+			"Name": "Andon Deck Studio Alert",
 			"DeviceType": 10,
 			"Readonly": false,
 			"DontAutoSwitchWhenInstalled": true,
 			"AutoInstall": true
 		},
 		{
-			"Name": "Claude Deck Neo Alert",
+			"Name": "Andon Deck Neo Alert",
 			"DeviceType": 9,
 			"Readonly": false,
 			"DontAutoSwitchWhenInstalled": true,
 			"AutoInstall": true
 		},
 		{
-			"Name": "Claude Deck Mobile Alert",
+			"Name": "Andon Deck Mobile Alert",
 			"DeviceType": 3,
 			"Readonly": false,
 			"DontAutoSwitchWhenInstalled": true,
 			"AutoInstall": true
 		},
 		{
-			"Name": "Claude Deck Virtual Alert",
+			"Name": "Andon Deck Virtual Alert",
 			"DeviceType": 11,
 			"Readonly": false,
 			"DontAutoSwitchWhenInstalled": true,

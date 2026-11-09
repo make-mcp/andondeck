@@ -38,7 +38,7 @@ const LONG_PRESS_MS = 900;
 /**
  * One-time connection between Claude Code and the deck.
  *
- * Pressing it writes the Claude Deck hooks into Claude Code's settings — or
+ * Pressing it writes the Andon Deck hooks into Claude Code's settings — or
  * removes them again — and the key reflects whether the bridge is healthy.
  */
 /** When each Connect key went down, so a hold can be told from a tap. */
@@ -74,7 +74,7 @@ export class SetupAction extends DeckAction<SetupSettings> {
 			tile({
 				family: "session",
 				tone: connected ? "working" : "accent",
-				eyebrow: "Claude Deck",
+				eyebrow: "Andon Deck",
 				headline: connected ? "Connected" : "Connect",
 				headlineTone: connected ? "state" : "ink",
 				subtitle: connected ? `Hold for the layout` : "Installs the hooks",

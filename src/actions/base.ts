@@ -67,7 +67,7 @@ function ensureTicker(): void {
 }
 
 /**
- * Shared plumbing for Claude Deck actions: boots the bridge on first appearance,
+ * Shared plumbing for Andon Deck actions: boots the bridge on first appearance,
  * keeps a copy of each instance's settings, and repaints on a tick.
  */
 export abstract class DeckAction<T extends JsonObject = JsonObject> extends SingletonAction<T> {

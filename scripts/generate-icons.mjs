@@ -70,7 +70,7 @@ function marketplaceIcon() {
 	return `<svg xmlns="http://www.w3.org/2000/svg" width="288" height="288" viewBox="0 0 288 288">
 		<rect width="288" height="288" rx="64" fill="${BACKDROP}"/>
 		${clawd(144 - 17 * 6, 56, 12)}
-		<text x="144" y="228" font-family="${FONT}" font-size="34" font-weight="700" fill="${INK}" text-anchor="middle">Claude Deck</text>
+		<text x="144" y="228" font-family="${FONT}" font-size="34" font-weight="700" fill="${INK}" text-anchor="middle">Andon Deck</text>
 	</svg>`;
 }
 

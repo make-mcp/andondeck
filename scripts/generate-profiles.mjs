@@ -184,7 +184,7 @@ function grid(rows) {
  */
 const DEVICES = [
 	{
-		name: "Claude Deck",
+		name: "Andon Deck",
 		deviceType: 0,
 		model: "20GBA9901",
 		controllers: [
@@ -199,7 +199,7 @@ const DEVICES = [
 		],
 	},
 	{
-		name: "Claude Deck Mini",
+		name: "Andon Deck Mini",
 		deviceType: 1,
 		model: "20GAI9901",
 		controllers: [
@@ -213,7 +213,7 @@ const DEVICES = [
 		],
 	},
 	{
-		name: "Claude Deck XL",
+		name: "Andon Deck XL",
 		deviceType: 2,
 		model: "20GAT9901",
 		controllers: [
@@ -229,7 +229,7 @@ const DEVICES = [
 		],
 	},
 	{
-		name: "Claude Deck Plus",
+		name: "Andon Deck Plus",
 		deviceType: 7,
 		model: "20GBD9901",
 		controllers: [
@@ -248,7 +248,7 @@ const DEVICES = [
 	},
 	{
 		// Model and grid copied from Elgato's own Volume Controller "+ XL" profile.
-		name: "Claude Deck Plus XL",
+		name: "Andon Deck Plus XL",
 		deviceType: 13,
 		model: "20GBX9901",
 		controllers: [
@@ -269,7 +269,7 @@ const DEVICES = [
 	},
 	{
 		// Model, grid and dial positions copied from Elgato's own Volume Controller "Galleon" profile.
-		name: "Claude Deck Galleon",
+		name: "Andon Deck Galleon",
 		deviceType: 12,
 		model: "GRETSCH",
 		controllers: [
@@ -291,7 +291,7 @@ const DEVICES = [
 	{
 		// Grid from the SDK's description (16 x 2 keys, a dial each side). No
 		// Elgato profile for the Studio was available to copy the model from.
-		name: "Claude Deck Studio",
+		name: "Andon Deck Studio",
 		deviceType: 10,
 		model: "20GBO9901",
 		controllers: [
@@ -311,7 +311,7 @@ const DEVICES = [
 	{
 		// Three pedals, no screens: the three things worth doing with your feet.
 		// Model per Stream Deck's hardware table; no Elgato pedal profile to copy.
-		name: "Claude Deck Pedal",
+		name: "Andon Deck Pedal",
 		deviceType: 5,
 		model: "20GBF9901",
 		controllers: [
@@ -322,7 +322,7 @@ const DEVICES = [
 		],
 	},
 	{
-		name: "Claude Deck Neo",
+		name: "Andon Deck Neo",
 		deviceType: 9,
 		model: "20GBJ9901",
 		controllers: [
@@ -338,7 +338,7 @@ const DEVICES = [
 	{
 		// Stream Deck Mobile picks its grid on the phone; 5 x 3 is the layout it
 		// starts with. Model as Stream Deck itself names the Wi-Fi client.
-		name: "Claude Deck Mobile",
+		name: "Andon Deck Mobile",
 		deviceType: 3,
 		model: "VSD/WiFi",
 		controllers: [
@@ -357,7 +357,7 @@ const DEVICES = [
 		// fills the 4 x 4 corner, so it reads whole at any size from there up.
 		// Model as Elgato's own on-screen profiles carry it (StreamDeck.exe
 		// calls this device ESDUiStreamDeck).
-		name: "Claude Deck Virtual",
+		name: "Andon Deck Virtual",
 		deviceType: 11,
 		model: "UI Stream Deck",
 		controllers: [

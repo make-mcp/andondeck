@@ -4,17 +4,17 @@
  * added to one cannot be forgotten in the other.
  */
 export const PROFILE_FOR_DEVICE: Record<number, string> = {
-	0: "Claude Deck",
-	1: "Claude Deck Mini",
-	2: "Claude Deck XL",
-	3: "Claude Deck Mobile",
-	5: "Claude Deck Pedal",
-	7: "Claude Deck Plus",
-	9: "Claude Deck Neo",
-	10: "Claude Deck Studio",
-	11: "Claude Deck Virtual",
-	12: "Claude Deck Galleon",
-	13: "Claude Deck Plus XL",
+	0: "Andon Deck",
+	1: "Andon Deck Mini",
+	2: "Andon Deck XL",
+	3: "Andon Deck Mobile",
+	5: "Andon Deck Pedal",
+	7: "Andon Deck Plus",
+	9: "Andon Deck Neo",
+	10: "Andon Deck Studio",
+	11: "Andon Deck Virtual",
+	12: "Andon Deck Galleon",
+	13: "Andon Deck Plus XL",
 };
 
 /**
