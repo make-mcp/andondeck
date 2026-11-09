@@ -28,6 +28,12 @@
 		<sdpi-item label="Session">
 			<sdpi-select setting="session" datasource="getSessions" placeholder="Active session"></sdpi-select>
 		</sdpi-item>
+		<sdpi-item label="Order">
+			<sdpi-checkbox setting="priority" label="Put it at the front of the queue"></sdpi-checkbox>
+		</sdpi-item>
+		<sdpi-item label="Replace">
+			<sdpi-checkbox setting="replaceQueue" label="Clear the queue first, so only this runs next"></sdpi-checkbox>
+		</sdpi-item>
 		<sdpi-item label="Duplicates">
 			<sdpi-checkbox setting="allowDuplicates" label="Allow queueing the same prompt twice"></sdpi-checkbox>
 		</sdpi-item>

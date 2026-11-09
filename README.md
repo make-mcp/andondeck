@@ -88,8 +88,8 @@ developer link), the same hold hands the profile file to Stream Deck, which offe
 Rows are tasks, not categories, because that is how a deck is actually used. On the XL:
 
 ```
-Watch     session 1   session 2   session 3   session 4   timer    context  5h limit  week limit
-Answer    allow       always      deny        stop        autopilot model   7 days    /context
+Watch     session 1   session 2   session 3   session 4   context  5h limit week limit 7 days
+Answer    allow       always      deny        stop        autopilot model   /model    /context
 Queue     run tests   review      commit      docs        paste    promote  drop      clear
 Start     project 1   project 2   review diff today       /compact continue autopilot connect
                                                                             (all)

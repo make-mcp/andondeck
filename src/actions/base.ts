@@ -75,7 +75,7 @@ export abstract class DeckAction<T extends JsonObject = JsonObject> extends Sing
 	readonly #settings = new Map<string, T>();
 
 	/** Short-lived explanations shown in place of the key's normal face. */
-	readonly #notices = new Map<string, { text: string; until: number }>();
+	readonly #notices = new Map<string, { text: string; until: number; kind: "refused" | "done" }>();
 
 	/** Draws one action instance. */
 	protected abstract draw(action: AnyAction<T>, settings: T): Promise<void> | void;
@@ -99,10 +99,26 @@ export abstract class DeckAction<T extends JsonObject = JsonObject> extends Sing
 		// reason, and naming it beats nine different symptoms.
 		const text = runtime.settings.hooksInstalled ? reason : "Press Connect Claude Code first";
 
-		this.#notices.set(action.id, { text, until: Date.now() + NOTICE_MS });
+		this.#notices.set(action.id, { text, until: Date.now() + NOTICE_MS, kind: "refused" });
 		streamDeck.logger.info(`${this.manifestId} refused: ${text}`);
 
 		await action.showAlert();
+		this.repaint();
+	}
+
+	/**
+	 * Says on the key what a press did, when the answer needs more than a tick —
+	 * "copied, now paste it", for example. Unlike {@link refuse}, no alert.
+	 * @param action The action instance.
+	 * @param text Short message, a few words at most.
+	 */
+	protected async inform(action: AnyAction<T>, text: string): Promise<void> {
+		this.#notices.set(action.id, { text, until: Date.now() + NOTICE_MS, kind: "done" });
+		streamDeck.logger.info(`${this.manifestId}: ${text}`);
+
+		if (action.isKey()) {
+			await action.showOk();
+		}
 		this.repaint();
 	}
 
@@ -133,7 +149,11 @@ export abstract class DeckAction<T extends JsonObject = JsonObject> extends Sing
 				const notice = this.#notices.get(typed.id);
 				if (notice && Date.now() < notice.until) {
 					if (typed.isKey()) {
-						void typed.setImage(tile({ tone: "waiting", eyebrow: "nothing to do", glyph: "·", title: notice.text }));
+						void typed.setImage(
+							notice.kind === "refused"
+								? tile({ tone: "waiting", eyebrow: "nothing to do", glyph: "·", title: notice.text })
+								: tile({ tone: "working", eyebrow: "done", glyph: "✓", title: notice.text, ghost: false }),
+						);
 						continue;
 					}
 				} else if (notice) {

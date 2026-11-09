@@ -19,6 +19,10 @@ type QueueSettings = SessionScoped & {
 	label?: string;
 	/** Queue the same prompt more than once. */
 	allowDuplicates?: boolean;
+	/** Put it at the front of the queue instead of the back. */
+	priority?: boolean;
+	/** Empty the queue first, so this is the only thing that runs next. */
+	replaceQueue?: boolean;
 } & JsonObject;
 
 /**
@@ -55,7 +59,7 @@ export class QueuePromptAction extends DeckAction<QueueSettings> {
 			tile({
 				family: "queue",
 				tone: idleHint ? "waiting" : "accent",
-				eyebrow: fromClipboard ? "Queue clipboard" : "Queue",
+				eyebrow: fromClipboard ? "Queue clipboard" : settings.replaceQueue ? "Run next" : settings.priority ? "Queue first" : "Queue",
 				headline: caption,
 				subtitle: idleHint ? "Session is idle" : session?.project,
 				badge: queued || undefined,
@@ -64,7 +68,7 @@ export class QueuePromptAction extends DeckAction<QueueSettings> {
 	}
 
 	override async onKeyDown(ev: KeyDownEvent<QueueSettings>): Promise<void> {
-		const { text, session, label, allowDuplicates, source, template } = ev.payload.settings;
+		const { text, session, label, allowDuplicates, source, template, priority, replaceQueue } = ev.payload.settings;
 		const prompt = source === "clipboard" ? await this.#fromClipboard(template) : text?.trim() || DEFAULT_PROMPT;
 
 		if (!prompt) {
@@ -77,12 +81,18 @@ export class QueuePromptAction extends DeckAction<QueueSettings> {
 			return;
 		}
 
-		if (!allowDuplicates && runtime.store.queueFor(session).some((item) => item.text === prompt)) {
+		if (replaceQueue) {
+			runtime.store.clearQueue(session);
+		} else if (!allowDuplicates && runtime.store.queueFor(session).some((item) => item.text === prompt)) {
 			await this.refuse(ev.action, "Already queued");
 			return;
 		}
 
 		runtime.store.enqueue(prompt, session, label || (source === "clipboard" ? keyLabel(prompt, 28) : undefined));
+		if (priority) {
+			const queue = runtime.store.queueFor(session);
+			runtime.store.promoteQueued(queue.length - 1, session);
+		}
 		await ev.action.showOk();
 		this.repaint();
 	}

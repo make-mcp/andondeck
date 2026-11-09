@@ -71,7 +71,7 @@ export class ModelAction extends DeckAction<ModelSettings> {
 		const target = settings.model || this.#next(session.model);
 		const command = `/model ${target}`;
 		const copied = await writeClipboard(command);
-		await this.refuse(ev.action, copied ? `Copied ${command} — paste it` : `Type ${command}`);
+		await (copied ? this.inform(ev.action, `Copied ${command} — paste it`) : this.refuse(ev.action, `Type ${command}`));
 	}
 
 	/** Picks the next alias after the one currently in use. */

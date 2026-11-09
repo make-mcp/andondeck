@@ -107,7 +107,7 @@ export class PromptAction extends DeckAction<PromptSettings> {
 		// about compacting. Say so instead of pretending, and leave it ready to paste.
 		if (isSlashCommand(text)) {
 			const copied = await writeClipboard(text.trim());
-			await this.refuse(ev.action, copied ? `Copied ${text.trim()} — paste it` : "Type it in the terminal");
+			await (copied ? this.inform(ev.action, `Copied ${text.trim()} — paste it`) : this.refuse(ev.action, "Type it in the terminal"));
 			return;
 		}
 

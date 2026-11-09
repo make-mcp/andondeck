@@ -123,7 +123,7 @@
 		{
 			"UUID": "io.github.claude-deck.plugin.prompt",
 			"Name": "Prompt / Slash Command",
-			"Tooltip": "Send a saved prompt or slash command to the active Claude Code session.",
+			"Tooltip": "Replaced by Queue Prompt, which does the same and more. Kept so existing keys keep working.",
 			"Icon": "imgs/actions/prompt/icon",
 			"Controllers": [
 				"Keypad"
@@ -135,7 +135,8 @@
 					"TitleAlignment": "bottom",
 					"FontSize": 10
 				}
-			]
+			],
+			"VisibleInActionsList": false
 		},
 		{
 			"UUID": "io.github.claude-deck.plugin.session",
@@ -270,7 +271,7 @@
 		{
 			"UUID": "io.github.claude-deck.plugin.model",
 			"Name": "Model",
-			"Tooltip": "Shows the session's model and switches it at the next turn boundary.",
+			"Tooltip": "Shows the session's model. A press copies /model with the next one, ready to paste; Claude Code only switches models from its own prompt.",
 			"Icon": "imgs/actions/model/icon",
 			"Controllers": [
 				"Keypad"

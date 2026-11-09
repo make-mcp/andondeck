@@ -108,12 +108,12 @@ const MODEL = key(A.model, "Model");
 const TIMER = key(A.usage, "Turn timer", { metric: "turn" });
 const CONTEXT = key(A.usage, "Context", { metric: "context" });
 const TOKENS = key(A.usage, "Tokens", { metric: "tokens" });
-const TOOLS = key(A.usage, "Tool calls", { metric: "tools" });
 const PLAN_5H = key(A.usage, "5h limit", { metric: "plan5h" });
 const PLAN_WEEK = key(A.usage, "Week limit", { metric: "planWeek" });
 const TODAY = key(A.usage, "Today", { metric: "today" });
 const WEEK = key(A.usage, "7 days", { metric: "week" });
 
+// Browse on a dial (rotate, press to move up); on a key the same entry means "newest next".
 const PROMOTE = key(A.queueControl, "Promote", { mode: "browse" });
 const DROP = key(A.queueControl, "Drop next", { mode: "drop-next" });
 const CLEAR = key(A.queueControl, "Clear queue", { mode: "clear" });
@@ -139,7 +139,9 @@ const typed = (command, label) => ({
 
 const COMPACT = typed("/compact", "Compact");
 const CONTEXT_GRID = typed("/context", "Context map");
-const CONTINUE = key(A.prompt, "Continue", { preset: "continue" });
+// Opens Claude Code's own model picker; the Model key beside it shows the current one.
+const MODEL_PICK = typed("/model", "Pick model");
+const CONTINUE = queue("Continue", "Continue where you left off.");
 
 // Launchers ship without a folder; the key says so until one is set.
 const LAUNCH = (label) => key(A.launch, "Launch Claude", { label });
@@ -217,8 +219,8 @@ const DEVICES = [
 			{
 				Type: "Keypad",
 				Actions: grid([
-					[SLOT(1), SLOT(2), SLOT(3), SLOT(4), TIMER, CONTEXT, PLAN_5H, PLAN_WEEK],
-					[ALLOW, ALWAYS, DENY, HALT, AUTO_SAFE, MODEL, WEEK, CONTEXT_GRID],
+					[SLOT(1), SLOT(2), SLOT(3), SLOT(4), CONTEXT, PLAN_5H, PLAN_WEEK, WEEK],
+					[ALLOW, ALWAYS, DENY, HALT, AUTO_SAFE, MODEL, MODEL_PICK, CONTEXT_GRID],
 					[Q_TESTS, Q_REVIEW, Q_COMMIT, Q_DOCS, Q_CLIP, PROMOTE, DROP, CLEAR],
 					[LAUNCH("Project 1"), LAUNCH("Project 2"), RUN_REVIEW, RUN_TODAY, COMPACT, CONTINUE, AUTO_ALL, SETUP],
 				]),
@@ -253,7 +255,7 @@ const DEVICES = [
 				Type: "Keypad",
 				Actions: grid([
 					[SLOT(1), SLOT(2), SLOT(3), SLOT(4), TIMER, CONTEXT, PLAN_5H, PLAN_WEEK, TOKENS],
-					[ALLOW, ALWAYS, DENY, HALT, AUTO_SAFE, AUTO_ALL, MODEL, CONTEXT_GRID, TOOLS],
+					[ALLOW, ALWAYS, DENY, HALT, AUTO_SAFE, AUTO_ALL, MODEL, MODEL_PICK, CONTEXT_GRID],
 					[Q_TESTS, Q_REVIEW, Q_COMMIT, Q_DOCS, Q_CLIP, PROMOTE, DROP, CLEAR, CONTINUE],
 					[LAUNCH("Project 1"), LAUNCH("Project 2"), LAUNCH("Project 3"), RUN_REVIEW, RUN_TODAY, COMPACT, TODAY, WEEK, SETUP],
 				]),

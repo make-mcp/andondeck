@@ -13,7 +13,11 @@ import { runtime } from "../runtime.js";
 import { keyLabel } from "../bridge/summarize.js";
 import { tile } from "../ui/render.js";
 
-/** What a key press does; dials always browse and apply. */
+/**
+ * What a press does. On a key, `browse` means the same as `promote` — there is
+ * nothing to browse without a dial — so a key dragged out unconfigured still
+ * does something you can name.
+ */
 type QueueMode = "clear" | "drop-next" | "promote" | "browse";
 
 type QueueControlSettings = SessionScoped & {
@@ -51,20 +55,24 @@ export class QueueControlAction extends DeckAction<QueueControlSettings> {
 			return;
 		}
 
-		const labels: Record<QueueMode, { glyph: string; title: string }> = {
-			clear: { glyph: "⌫", title: "Clear queue" },
-			"drop-next": { glyph: "−", title: "Drop next" },
-			promote: { glyph: "↑", title: "Promote last" },
-			browse: { glyph: "≡", title: "Queue" },
+		const titles: Record<QueueMode, string> = {
+			clear: "Clear queue",
+			"drop-next": "Drop next",
+			promote: "Next ↑",
+			browse: "Next ↑",
 		};
+		// Name the entry the press would act on: the next one for drop and
+		// clear, the newest for promote, since that is the one moving up.
+		const promoting = mode === "promote" || mode === "browse";
+		const subject = promoting ? queue[queue.length - 1] : queue[0];
 
 		await unit.setImage(
 			tile({
 				family: "queue",
 				tone: queue.length ? "accent" : "offline",
 				eyebrow: "Queue",
-				headline: labels[mode].title,
-				subtitle: queue.length ? keyLabel(queue[0].label || queue[0].text, 22) : "Empty",
+				headline: titles[mode],
+				subtitle: subject ? keyLabel(subject.label || subject.text, 22) : "Empty",
 				badge: queue.length || undefined,
 			}),
 		);
@@ -98,11 +106,12 @@ export class QueueControlAction extends DeckAction<QueueControlSettings> {
 			case "drop-next":
 				runtime.store.removeQueued(0, session);
 				break;
-			case "promote":
+			default:
+				if (queue.length < 2) {
+					await this.refuse(ev.action, "Already next");
+					return;
+				}
 				runtime.store.promoteQueued(queue.length - 1, session);
-				break;
-			case "browse":
-				runtime.store.promoteQueued(1, session);
 				break;
 		}
 
