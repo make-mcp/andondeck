@@ -327,7 +327,9 @@ export type EdgeMotion =
 	/** A ring with a gap, held still: it stopped. */
 	| "broken"
 	/** Dashes drifting: a long operation with no progress to report. */
-	| "drift";
+	| "drift"
+	/** Dashes held still: a mode you could switch to, while another one is on. */
+	| "standby";
 
 export type TileOptions = {
 	tone: TileTone;
@@ -562,6 +564,12 @@ function edge(motion: EdgeMotion, tone: string, phase: number): string {
 			// A ring with a piece missing reads as "stopped", even unlit.
 			const gap = PERIMETER * 0.12;
 			return box(3, tone, `stroke-dasharray="${PERIMETER - gap} ${gap}" stroke-dashoffset="${-PERIMETER * 0.06}"`);
+		}
+
+		case "standby": {
+			// Still, unlike drift: nothing is running here, it is waiting to be chosen.
+			const dash = PERIMETER / 20;
+			return box(2.5, tone, `stroke-dasharray="${(dash * 0.55).toFixed(2)} ${(dash * 0.45).toFixed(2)}"`);
 		}
 
 		case "drift": {

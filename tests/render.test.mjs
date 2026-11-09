@@ -62,6 +62,7 @@ describe("key artwork", () => {
 	it("renders the decorations", async () => {
 		await render(tile({ tone: "accent", glyph: "+", title: "Queue", badge: 3 }));
 		await render(tile({ tone: "working", glyph: "▶", title: "Working", progress: 0.42 }));
+		await render(tile({ tone: "error", headline: "All tools", edge: "standby", subtitle: "press to switch" }));
 		await render(tile({ tone: "idle", glyph: "✓", title: "Allow", solid: true, eyebrow: "allow · 30s" }));
 		await render(tile({ tone: "offline" }));
 	});

@@ -28,39 +28,57 @@ export class AutopilotAction extends DeckAction<AutopilotSettings> {
 		}
 
 		const scope = settings.scope ?? "safe";
+		const label = scope === "all" ? "All tools" : "Read-only";
 		const active = runtime.bridge.autoApprove;
 		const remaining = active.until ? active.until - Date.now() : 0;
 
-		if (active.mode === "off") {
-			await key.setState(0);
+		// This key's own mode is on: flood it, so it is unmistakably the one running.
+		// Approving everything floods red rather than the quiet accent.
+		if (active.mode === scope) {
+			await key.setState(1);
 			await key.setImage(
 				tile({
 					family: "control",
-					ghost: "sleep",
-					tone: "accent",
-					// Two autopilot keys on one deck must not look alike while both are
-					// off, so the scope is the headline and "off" the caption.
+					tone: scope === "all" ? "error" : "accent",
+					solid: true,
 					eyebrow: "Autopilot",
-					headline: scope === "all" ? "All tools" : "Read-only",
-					subtitle: settings.minutes ? `Off · arms ${settings.minutes} min` : "Off",
+					headline: label,
+					subtitle: active.until ? `on · ${duration(remaining)}` : "on",
+					progress: active.until && settings.minutes ? remaining / (settings.minutes * 60_000) : undefined,
 				}),
 			);
 			return;
 		}
 
-		// Armed is a mode, not a machine state, so it inverts rather than
-		// borrowing the amber that means Claude is waiting on you. Approving
-		// everything additionally carries a full red ring.
-		await key.setState(1);
+		await key.setState(0);
+
+		// The other mode is on: this key is one press from taking over. A still,
+		// dashed ring says "available" without looking like it is running.
+		if (active.mode !== "off") {
+			await key.setImage(
+				tile({
+					family: "control",
+					ghost: "sleep",
+					tone: scope === "all" ? "error" : "accent",
+					edge: "standby",
+					eyebrow: "Autopilot",
+					headline: label,
+					subtitle: "press to switch",
+				}),
+			);
+			return;
+		}
+
 		await key.setImage(
 			tile({
 				family: "control",
-				tone: active.mode === "all" ? "error" : "accent",
-				solid: true,
+				ghost: "sleep",
+				tone: "accent",
+				// Two autopilot keys on one deck must not look alike while both are
+				// off, so the scope is the headline and "off" the caption.
 				eyebrow: "Autopilot",
-				headline: active.mode === "all" ? "All tools" : "Read-only",
-				subtitle: active.until ? duration(remaining) : "Until pressed",
-				progress: active.until && settings.minutes ? remaining / (settings.minutes * 60_000) : undefined,
+				headline: label,
+				subtitle: settings.minutes ? `off · ${settings.minutes} min` : "off",
 			}),
 		);
 	}
@@ -68,10 +86,12 @@ export class AutopilotAction extends DeckAction<AutopilotSettings> {
 	override async onKeyDown(ev: KeyDownEvent<AutopilotSettings>): Promise<void> {
 		const { scope = "safe", minutes = 15 } = ev.payload.settings;
 
-		if (runtime.bridge.autoApprove.mode === "off") {
-			runtime.bridge.setAutoApprove(scope, Math.max(0, minutes) * 60_000);
-		} else {
+		// A key turns its own mode off, and switches to its own mode from any
+		// other — so every press does what the key says.
+		if (runtime.bridge.autoApprove.mode === scope) {
 			runtime.bridge.setAutoApprove("off", 0);
+		} else {
+			runtime.bridge.setAutoApprove(scope, Math.max(0, minutes) * 60_000);
 		}
 
 		await ev.action.showOk();
