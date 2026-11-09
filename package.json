@@ -37,7 +37,8 @@
     "pretest": "tsc -p tsconfig.test.json && cp .test-build-package.json .test-build/package.json",
     "unlink": "node scripts/dev-link.mjs --unlink",
     "profiles": "node scripts/generate-profiles.mjs",
-    "site": "tsc -p tsconfig.test.json && cp .test-build-package.json .test-build/package.json && node site/build.mjs"
+    "site": "tsc -p tsconfig.test.json && cp .test-build-package.json .test-build/package.json && node site/build.mjs",
+    "marketplace": "tsc -p tsconfig.test.json && cp .test-build-package.json .test-build/package.json && node site/marketplace.mjs"
   },
   "dependencies": {
     "@elgato/streamdeck": "^3.0.4",
