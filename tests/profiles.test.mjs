@@ -3,7 +3,7 @@ import { readFile } from "node:fs/promises";
 import { inflateRawSync } from "node:zlib";
 import { describe, it } from "node:test";
 
-import { PROFILE_FOR_DEVICE } from "../.test-build/profiles.js";
+import { ALERT_PROFILE_FOR_DEVICE, PROFILE_FOR_DEVICE } from "../.test-build/profiles.js";
 
 const DIR = new URL("../io.github.claude-deck.plugin.sdPlugin/", import.meta.url);
 
@@ -34,16 +34,30 @@ const GRIDS = { 0: [5, 3], 1: [3, 2], 2: [8, 4], 3: [5, 3], 5: [3, 1], 7: [4, 2]
 describe("bundled profiles", () => {
 	it("covers every Stream Deck with screens or pedals", () => {
 		assert.deepEqual(
-			manifest.Profiles.map((p) => p.DeviceType).sort((a, b) => a - b),
+			manifest.Profiles.filter((p) => !p.Name.endsWith(" Alert"))
+				.map((p) => p.DeviceType)
+				.sort((a, b) => a - b),
 			Object.keys(GRIDS).map(Number),
 		);
 	});
 
 	it("can switch to every bundled profile from the Connect key", () => {
-		assert.deepEqual(
-			Object.fromEntries(manifest.Profiles.map((p) => [p.DeviceType, p.Name])),
-			Object.fromEntries(Object.entries(PROFILE_FOR_DEVICE).map(([type, name]) => [Number(type), name])),
-		);
+		const of = (alert) => Object.fromEntries(manifest.Profiles.filter((p) => p.Name.endsWith(" Alert") === alert).map((p) => [p.DeviceType, p.Name]));
+		const map = (table) => Object.fromEntries(Object.entries(table).map(([type, name]) => [Number(type), name]));
+		assert.deepEqual(of(false), map(PROFILE_FOR_DEVICE));
+		assert.deepEqual(of(true), map(ALERT_PROFILE_FOR_DEVICE));
+	});
+
+	it("fills every key of an alert profile, and only with the alert", async () => {
+		for (const entry of manifest.Profiles.filter((p) => p.Name.endsWith(" Alert"))) {
+			const files = unzip(await readFile(new URL(`${entry.Name}.streamDeckProfile`, DIR)));
+			const [columns, rows] = GRIDS[entry.DeviceType];
+			const pages = [...files.keys()].filter((n) => /\/Profiles\/[^/]+\/manifest\.json$/.test(n)).map((n) => JSON.parse(files.get(n)));
+			const keypad = pages.flatMap((page) => page.Controllers).find((c) => c.Type === "Keypad" && c.Actions);
+			const actions = Object.values(keypad.Actions);
+			assert.equal(actions.length, columns * rows, entry.Name);
+			assert.ok(actions.every((a) => a.UUID === "io.github.claude-deck.plugin.alert"), entry.Name);
+		}
 	});
 
 	for (const entry of manifest.Profiles) {

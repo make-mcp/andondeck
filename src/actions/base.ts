@@ -137,6 +137,12 @@ export abstract class DeckAction<T extends JsonObject = JsonObject> extends Sing
 	 * @param scope `all`, or only the instances that are animating.
 	 */
 	public repaint(scope: "all" | "animating" = "all"): void {
+		// The first appearance starts the runtime; until it is up there is
+		// nothing to draw from, and onWillAppear draws once it is.
+		if (!runtime.started) {
+			return;
+		}
+
 		for (const action of this.actions) {
 			const typed = action as AnyAction<T>;
 

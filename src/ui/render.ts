@@ -749,3 +749,68 @@ export function strip(options: { title: string; value: string; subtitle?: string
 		${options.subtitle ? `<text x="12" y="94" font-family="${FONT}" font-size="12" font-weight="500" fill="${PALETTE.inkDim}">${escapeXml(clip(options.subtitle, 28))}</text>` : ""}
 	</svg>`);
 }
+
+/**
+ * The whole deck as one picture: Clawd waving for attention.
+ *
+ * Drawn once at deck size, then shown through each key as a 72-unit window
+ * onto it (see {@link alertKey}), so the keys together read as a single
+ * screen rather than as a grid of icons.
+ * @param columns Keys across.
+ * @param rows Keys down.
+ * @param frame Animation frame; even and odd alternate the wave.
+ * @param project Who is asking, when known.
+ * @returns SVG markup in deck coordinates, without the outer `<svg>`.
+ */
+export function alertScene(columns: number, rows: number, frame: number, project?: string): string {
+	const width = columns * 72;
+	const height = rows * 72;
+	// Very wide decks (the Studio) put the words beside Clawd, the rest below.
+	const side = width / height > 3;
+	const textBand = side || rows < 3 ? 0 : height * 0.26;
+	const area = side ? { w: width * 0.45, h: height } : { w: width, h: height - textBand };
+	const cell = Math.min(area.w / 21, area.h / 13);
+	const cx = side ? area.w / 2 + width * 0.05 : width / 2;
+	const top = (area.h - 10 * cell) / 2 + (frame % 2 === 0 ? 0 : -cell * 0.4);
+
+	// Waving: the raised arm and the arm held out, in turn.
+	const pose: Pose = frame % 2 === 0 ? "wave" : "stand";
+	const figure = drawPose({ pose, body: CLAWD, eye: "#14110F" }, cx - (17 * cell) / 2, top, cell, true);
+
+	const headline = "Claude needs you";
+	const detail = project ? `${project} · press any key` : "press any key";
+	let words = "";
+	if (side) {
+		const size = Math.min(height * 0.2, (width * 0.5) / (headline.length * 0.58));
+		const x = width * 0.52;
+		words =
+			`<text x="${x.toFixed(1)}" y="${(height * 0.47).toFixed(1)}" font-family="${FONT}" font-size="${size.toFixed(1)}" font-weight="700" fill="${PALETTE.waiting}">${escapeXml(headline)}</text>` +
+			`<text x="${x.toFixed(1)}" y="${(height * 0.47 + size * 1.2).toFixed(1)}" font-family="${FONT}" font-size="${(size * 0.55).toFixed(1)}" font-weight="500" fill="${PALETTE.ink}">${escapeXml(detail)}</text>`;
+	} else if (textBand > 0) {
+		const size = Math.min(textBand * 0.42, (width * 0.85) / (headline.length * 0.58));
+		const y = height - textBand + size * 1.05;
+		words =
+			`<text x="${width / 2}" y="${y.toFixed(1)}" font-family="${FONT}" font-size="${size.toFixed(1)}" font-weight="700" fill="${PALETTE.waiting}" text-anchor="middle">${escapeXml(headline)}</text>` +
+			`<text x="${width / 2}" y="${(y + size * 1.05).toFixed(1)}" font-family="${FONT}" font-size="${(size * 0.55).toFixed(1)}" font-weight="500" fill="${PALETTE.ink}" text-anchor="middle">${escapeXml(detail)}</text>`;
+	}
+
+	return (
+		`<defs><radialGradient id="glow" cx="${(cx / width).toFixed(3)}" cy="${((top + 5 * cell) / height).toFixed(3)}" r="0.7">` +
+		`<stop offset="0" stop-color="${PALETTE.waiting}" stop-opacity=".38"/><stop offset="1" stop-color="${PALETTE.waiting}" stop-opacity="0"/></radialGradient></defs>` +
+		`<rect width="${width}" height="${height}" fill="${PALETTE.backdrop}"/>` +
+		`<rect width="${width}" height="${height}" fill="url(#glow)"/>` +
+		`<g shape-rendering="crispEdges">${figure}</g>` +
+		words
+	);
+}
+
+/**
+ * One key's window onto an {@link alertScene}.
+ * @param scene The scene markup.
+ * @param column The key's column.
+ * @param row The key's row.
+ * @returns A data URI for the key.
+ */
+export function alertKey(scene: string, column: number, row: number): string {
+	return toDataUri(`<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="${column * 72} ${row * 72} 72 72">${scene}</svg>`);
+}

@@ -120,6 +120,11 @@ posed for what they do: cheering on Allow, arms hanging on Deny, a hand up on St
 launch keys, asleep on Autopilot. Meters stay plain so their numbers have the whole key. Untick **Mascot**
 under **Connect Claude Code** for plain keys everywhere.
 
+When Claude asks for permission or has a question, every connected deck switches for a moment to a
+full-screen Clawd waving across all its keys — whatever profile it was showing. Any key takes you back to
+where you were, and so does answering in the terminal. A turn simply ending does not raise it. Untick
+**Alert** under **Connect Claude Code** to keep your decks as they are.
+
 ## Install
 
 ### From source

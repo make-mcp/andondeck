@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 
 import sharp from "sharp";
 
-import { PALETTE, compactNumber, duration, fit, setGhosts, tile } from "../.test-build/ui/render.js";
+import { PALETTE, alertKey, alertScene, compactNumber, duration, fit, setGhosts, tile } from "../.test-build/ui/render.js";
 
 /**
  * Decodes a key image and renders it.
@@ -57,6 +57,24 @@ describe("key artwork", () => {
 		} finally {
 			setGhosts(true);
 		}
+	});
+
+	it("spreads one alert picture over every key of a deck", async () => {
+		for (const [columns, rows] of [[8, 4], [5, 3], [3, 2], [16, 2], [4, 2]]) {
+			const scene = alertScene(columns, rows, 0, "acme-api");
+			const keys = new Set();
+			for (let row = 0; row < rows; row++) {
+				for (let column = 0; column < columns; column++) {
+					const uri = alertKey(scene, column, row);
+					keys.add(uri);
+					const info = await render(uri);
+					assert.equal(info.width, 72);
+				}
+			}
+			// Distinct windows onto the scene, not one image repeated.
+			assert.ok(keys.size > columns * rows / 2, `${columns}x${rows}`);
+		}
+		assert.notEqual(alertScene(8, 4, 0), alertScene(8, 4, 1), "the frames differ, so Clawd waves");
 	});
 
 	it("renders the decorations", async () => {

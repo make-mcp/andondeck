@@ -1,6 +1,7 @@
 import streamDeck from "@elgato/streamdeck";
 import type { JsonValue } from "@elgato/utils";
 
+import { AlertAction } from "./actions/alert.js";
 import { ApproveAction } from "./actions/approve.js";
 import { AutopilotAction } from "./actions/autopilot.js";
 import { HaltAction } from "./actions/halt.js";
@@ -36,6 +37,7 @@ streamDeck.actions.onWillAppear((ev) => {
 });
 
 streamDeck.actions.registerAction(new StatusAction());
+streamDeck.actions.registerAction(new AlertAction());
 streamDeck.actions.registerAction(new QueuePromptAction());
 streamDeck.actions.registerAction(new QueueControlAction());
 streamDeck.actions.registerAction(new ApproveAction());

@@ -16,3 +16,13 @@ export const PROFILE_FOR_DEVICE: Record<number, string> = {
 	12: "Claude Deck Galleon",
 	13: "Claude Deck Plus XL",
 };
+
+/**
+ * The full-deck alert profile for each device type. The Pedal has no screens
+ * to show it on, so it has none.
+ */
+export const ALERT_PROFILE_FOR_DEVICE: Record<number, string> = Object.fromEntries(
+	Object.entries(PROFILE_FOR_DEVICE)
+		.filter(([type]) => Number(type) !== 5)
+		.map(([type, name]) => [Number(type), `${name} Alert`]),
+);

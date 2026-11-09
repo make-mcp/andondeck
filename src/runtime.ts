@@ -17,6 +17,7 @@ import {
 import { helperPath } from "./claude/helpers.js";
 import { PlanTrend, UsageHistory } from "./claude/history.js";
 import { setGhosts } from "./ui/render.js";
+import { ALERT_PROFILE_FOR_DEVICE } from "./profiles.js";
 import {
 	claudeHome,
 	detectClaudeLocations,
@@ -64,6 +65,8 @@ export type GlobalSettings = {
 	planLimits: boolean;
 	/** Faint Clawd in the background of action keys. */
 	ghosts: boolean;
+	/** Take over the whole deck with Clawd when Claude asks for something. */
+	alertTakeover: boolean;
 	[key: string]: JsonValue;
 };
 
@@ -83,6 +86,7 @@ const DEFAULTS: GlobalSettings = {
 	autoCompactK: "",
 	planLimits: true,
 	ghosts: true,
+	alertTakeover: true,
 };
 
 export type RuntimeEvents = {
@@ -111,8 +115,19 @@ class Runtime extends EventEmitter<RuntimeEvents> {
 	/** Plan-limit readings over time, for trends and projections. */
 	public readonly planTrend = new PlanTrend();
 
+	/** Sessions already waiting at the last look, so each request alerts once. */
+	#waitingSeen = new Set<string>();
+
+	/** Devices currently showing the alert profile. */
+	readonly #alerting = new Set<string>();
+
 	public get settings(): Readonly<GlobalSettings> {
 		return this.#settings;
+	}
+
+	/** Whether {@link start} has got far enough for keys to draw from it. */
+	public get started(): boolean {
+		return this.#bridge !== undefined;
 	}
 
 	public get bridge(): Bridge {
@@ -154,13 +169,18 @@ class Runtime extends EventEmitter<RuntimeEvents> {
 			notifyTerminal: this.#settings.notifyTerminal,
 		});
 
-		bridge.on("change", () => this.emit("change"));
+		bridge.on("change", () => {
+			this.emit("change");
+			void this.#checkAlert();
+		});
 		bridge.on("log", (message) => streamDeck.logger.info(message));
 		bridge.on("notify", ({ title, body }) => this.emit("notify", { title, body }));
 		bridge.on("limits", (limits) => this.planTrend.record(limits));
-		await this.planTrend.load();
 
+		// Assigned before anything else is awaited: keys repaint on their own
+		// clock and must never find a half-started runtime.
 		this.#bridge = bridge;
+		await this.planTrend.load();
 		await bridge.start();
 		this.#syncApprovalMode();
 
@@ -180,6 +200,87 @@ class Runtime extends EventEmitter<RuntimeEvents> {
 		streamDeck.settings.onDidReceiveGlobalSettings<Partial<GlobalSettings>>((ev) => {
 			void this.#adopt(ev.settings);
 		});
+	}
+
+	/**
+	 * Takes over every deck with the alert profile when a session starts
+	 * waiting, and gives the decks back once nothing waits any more.
+	 *
+	 * Only a session newly waiting raises it: after a press sends you back, the
+	 * same request does not pull you away again.
+	 */
+	async #checkAlert(): Promise<void> {
+		const waiting = this.store.list().filter((session) => session.status === "waiting");
+		const fresh = waiting.some((session) => !this.#waitingSeen.has(session.sessionId));
+		this.#waitingSeen = new Set(waiting.map((session) => session.sessionId));
+
+		if (waiting.length === 0) {
+			if (this.#alerting.size > 0) {
+				streamDeck.logger.info("alert: nothing waits any more, giving the decks back");
+				await this.dismissAlert();
+			}
+			return;
+		}
+
+		if (!fresh || !this.#settings.alertTakeover) {
+			return;
+		}
+
+		for (const device of streamDeck.devices) {
+			const profile = ALERT_PROFILE_FOR_DEVICE[device.type as number];
+			if (!profile || !device.isConnected || this.#alerting.has(device.id)) {
+				continue;
+			}
+			this.#alerting.add(device.id);
+			streamDeck.logger.info(`alert: ${device.name} switches to ${profile}`);
+			await streamDeck.profiles.switchToProfile(device.id, profile).catch((error: Error) => {
+				this.#alerting.delete(device.id);
+				streamDeck.logger.warn(`alert: could not switch ${device.name}: ${error.message}`);
+			});
+
+			// Stream Deck takes the request without saying whether the profile
+			// exists. If no alert key shows up, it was never installed: say so,
+			// and do not later "switch back" a deck that never left.
+			setTimeout(() => {
+				const shown = [...streamDeck.actions].some(
+					(unit) => unit.manifestId === "io.github.claude-deck.plugin.alert" && unit.device.id === device.id,
+				);
+				if (!shown && this.#alerting.delete(device.id)) {
+					streamDeck.logger.warn(`alert: ${profile} did not appear on ${device.name} — the profile is not installed`);
+				}
+			}, 2000).unref?.();
+		}
+	}
+
+	/** Sends every deck showing the alert back to the profile it came from. */
+	public async dismissAlert(): Promise<void> {
+		const devices = [...this.#alerting];
+		this.#alerting.clear();
+		for (const id of devices) {
+			// No profile name: Stream Deck returns to the one shown before.
+			await streamDeck.profiles.switchToProfile(id).catch((error: Error) =>
+				streamDeck.logger.warn(`alert: could not switch back: ${error.message}`),
+			);
+		}
+	}
+
+	/**
+	 * Notes that a device left the alert profile some other way — the user
+	 * picked another profile — so it is not switched "back" later.
+	 * @param deviceId The device.
+	 */
+	public alertLeft(deviceId: string): void {
+		// Our own switch back clears the set first; anything still listed here
+		// was left by hand. Defer a tick, since the last key's disappearance is
+		// what tells.
+		setTimeout(() => {
+			const stillShowing = [...streamDeck.actions].some(
+				(unit) => unit.manifestId === "io.github.claude-deck.plugin.alert" && unit.device.id === deviceId,
+			);
+			if (!stillShowing) {
+				this.#alerting.delete(deviceId);
+			}
+		}, 250).unref?.();
 	}
 
 	/**

@@ -50,6 +50,7 @@ const A = {
 	halt: `${PLUGIN}.halt`,
 	model: `${PLUGIN}.model`,
 	setup: `${PLUGIN}.setup`,
+	alert: `${PLUGIN}.alert`,
 };
 
 /** Number of states each action declares in the plugin manifest. */
@@ -373,6 +374,27 @@ const DEVICES = [
 	},
 ];
 
+/** Keys across and down per device type, for filling an alert profile. */
+const KEY_GRID = { 0: [5, 3], 1: [3, 2], 2: [8, 4], 3: [5, 3], 7: [4, 2], 9: [4, 2], 10: [16, 2], 11: [8, 8], 12: [3, 4], 13: [9, 4] };
+
+/**
+ * One alert profile per device with screens: every key is the alert action,
+ * which draws its own piece of the full-deck Clawd. Dials stay empty.
+ */
+const ALERTS = DEVICES.filter((device) => KEY_GRID[device.deviceType]).map((device) => {
+	const [columns, rows] = KEY_GRID[device.deviceType];
+	const ALERT = key(A.alert, "Alert");
+	return {
+		...device,
+		name: `${device.name} Alert`,
+		controllers: device.controllers.map((controller) =>
+			controller.Type === "Keypad"
+				? { Type: "Keypad", Actions: grid(Array.from({ length: rows }, () => Array.from({ length: columns }, () => ALERT))) }
+				: { Type: controller.Type, Actions: {} },
+		),
+	};
+});
+
 /**
  * Derives a stable identifier from a name.
  *
@@ -407,7 +429,7 @@ const plugin = { Name: manifest.Name, UUID: PLUGIN, Version: manifest.Version };
  * real one, and a per-key `ActionID` plus `Plugin` block. The older 6.x layout
  * this generator used to write was silently ignored.
  */
-for (const device of DEVICES) {
+for (const device of [...DEVICES, ...ALERTS]) {
 	const id = async (what) => asUuid(await stableId(`${PLUGIN}:${device.name}:${what}`, 32));
 	const profileId = await id("profile");
 	const pageId = await id("page");
@@ -485,12 +507,12 @@ for (const device of DEVICES) {
 	]);
 
 	await writeFile(join(outDir, `${device.name}.streamDeckProfile`), zip);
-	const keys = device.controllers.reduce((total, c) => total + Object.keys(c.Actions).length, 0);
+	const keys = device.controllers.reduce((total, c) => total + Object.keys(c.Actions ?? {}).length, 0);
 	console.log(`profile ${device.name.padEnd(18)} type=${device.deviceType} ${keys} actions`);
 }
 
 // Keep the manifest's Profiles list in step with what was generated.
-manifest.Profiles = DEVICES.map((device) => ({
+manifest.Profiles = [...DEVICES, ...ALERTS].map((device) => ({
 	Name: device.name,
 	DeviceType: device.deviceType,
 	Readonly: false,
