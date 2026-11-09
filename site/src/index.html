@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="{{lang}}"{{{root}}}>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{title}}</title>
+<meta name="description" content="{{description}}">
+<link rel="canonical" href="{{canonical}}">
+{{{alternates}}}
+<meta property="og:title" content="{{title}}">
+<meta property="og:description" content="{{description}}">
+<meta property="og:url" content="{{canonical}}">
+<meta property="og:type" content="website">
+<meta property="og:locale" content="{{locale}}">
+<meta property="og:image" content="https://andondeck.com/assets/og.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="theme-color" content="#141413">
+<link rel="icon" href="{{up}}favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="{{up}}style.css?v={{vCss}}">
+<script src="{{up}}lang.js?v={{vLang}}"></script>
+</head>
+<body data-lang="{{langCode}}" data-up="{{up}}" data-demo="{{up}}assets/demo.json?v={{vDemo}}">
+<a class="skip" href="#main">{{skip}}</a>
+
+<header class="top">
+  <nav class="wrap nav" aria-label="{{navLabel}}">
+    <a class="brand" href="#top"><span class="lamp" aria-hidden="true"><i></i><i></i><i></i></span> andon deck</a>
+    <div class="links">
+      <a href="#how">{{navHow}}</a>
+      <a href="#features">{{navFeatures}}</a>
+      <a href="#devices">{{navDevices}}</a>
+      <a href="#install">{{navInstall}}</a>
+      <a href="https://github.com/make-mcp/claude-deck">github ↗</a>
+      <div class="lang-menu"><button type="button" class="lang-btn" aria-haspopup="menu" aria-expanded="false" aria-controls="lang-list" aria-label="{{langLabel}}: {{langUpper}}"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.3"><circle cx="8" cy="8" r="6.5"/><path d="M1.5 8h13M8 1.5c2 2.2 2 10.8 0 13M8 1.5c-2 2.2-2 10.8 0 13"/></svg><span>{{langUpper}}</span></button><ul class="lang-list" id="lang-list" role="menu" hidden>{{{langMenu}}}</ul></div>
+    </div>
+  </nav>
+</header>
+
+<div class="lang-hint" id="lang-hint" role="status" hidden></div>
+
+<main id="main">
+  <section class="wrap hero" id="top">
+    <pre class="logo" aria-label="Andon Deck">
+<span>▄▀█ █▀▄ █ █▀▄ █▀█ █▀▄ █</span>   <span class="accent">█▀▄ █▀▀ █▀▀ █▄▀</span>
+<span>█▀█ █ ▀▄█ █▄▀ █▄█ █ ▀▄█</span>   <span class="accent">█▄▀ ██▄ █▄▄ █ █</span></pre>
+    <p class="kicker">{{kicker}}</p>
+    <h1>{{{h1}}}</h1>
+    <p class="lead">{{{lead}}}</p>
+    <div class="cta">
+      <a class="btn" href="https://github.com/make-mcp/claude-deck/releases/latest">{{download}}</a>
+      <a class="btn btn-ghost" href="https://github.com/make-mcp/claude-deck">★ {{star}}</a>
+    </div>
+    <p class="works">{{{works}}}</p>
+  </section>
+
+  <section class="wrap demo" aria-label="{{demoLabel}}">
+    <div class="deck-frame">
+      <div class="deck-bar"><span class="dots" aria-hidden="true"><i></i><i></i><i></i></span><span class="deck-title">Stream Deck XL · Andon Deck XL</span><button class="replay" type="button" id="replay">↻ {{replay}}</button></div>
+      <div class="deck" id="deck" role="img" aria-label="{{demoAria}}"></div>
+      <p class="deck-caption" id="caption" aria-live="polite" data-s1="{{s1}}" data-s2="{{s2}}" data-s3="{{s3}}" data-s4="{{s4}}" data-s5="{{s5}}" data-s6="{{s6}}" data-s7="{{s7}}" data-s8="{{s8}}">{{s1}}</p>
+      <ol class="deck-steps" id="steps" aria-hidden="true"><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li></ol>
+    </div>
+  </section>
+
+  <section class="wrap manifesto" id="how">
+    <blockquote><p>{{quote}}</p></blockquote>
+    <p>{{{manifesto}}}</p>
+  </section>
+
+  <section class="wrap" aria-labelledby="edge-title">
+    <h2 id="edge-title"><span class="hash">##</span> {{edgeTitle}}</h2>
+    <p class="section-lead">{{edgeLead}}</p>
+    <ul class="legend">
+      <li><img class="key" data-legend="travel" alt=""><b>{{edgeTravel}}</b><span>{{edgeTravelText}}</span></li>
+      <li><img class="key" data-legend="pulse" alt=""><b>{{edgePulse}}</b><span>{{edgePulseText}}</span></li>
+      <li><img class="key" data-legend="broken" alt=""><b>{{edgeBroken}}</b><span>{{edgeBrokenText}}</span></li>
+      <li><img class="key" data-legend="drift" alt=""><b>{{edgeDrift}}</b><span>{{edgeDriftText}}</span></li>
+      <li><img class="key" data-legend="quiet" alt=""><b>{{edgeQuiet}}</b><span>{{edgeQuietText}}</span></li>
+      <li><img class="key" data-legend="standby" alt=""><b>{{edgeStandby}}</b><span>{{edgeStandbyText}}</span></li>
+    </ul>
+  </section>
+
+  <section class="wrap" id="features" aria-labelledby="feat-title">
+    <h2 id="feat-title"><span class="hash">##</span> {{featTitle}}</h2>
+    <div class="cards">
+      <article class="card"><header><h3>{{f1Title}}</h3><span class="tag">{{f1Tag}}</span></header><p>{{f1Text}}</p></article>
+      <article class="card"><header><h3>{{f2Title}}</h3><span class="tag">{{f2Tag}}</span></header><p>{{f2Text}}</p></article>
+      <article class="card"><header><h3>{{f3Title}}</h3><span class="tag">{{f3Tag}}</span></header><p>{{f3Text}}</p></article>
+      <article class="card"><header><h3>{{f4Title}}</h3><span class="tag">{{f4Tag}}</span></header><p>{{f4Text}}</p><img class="strip" src="{{up}}assets/dial-plan.svg" alt="{{f4Alt}}" width="200" height="100" loading="lazy"></article>
+      <article class="card"><header><h3>{{f5Title}}</h3><span class="tag">{{f5Tag}}</span></header><p>{{f5Text}}</p><img class="strip" src="{{up}}assets/dial-week.svg" alt="{{f5Alt}}" width="200" height="100" loading="lazy"></article>
+      <article class="card"><header><h3>{{f6Title}}</h3><span class="tag">{{f6Tag}}</span></header><p>{{f6Text}}</p></article>
+    </div>
+  </section>
+
+  <section class="wrap alert-sec" id="alert" aria-labelledby="alert-title">
+    <h2 id="alert-title"><span class="hash">##</span> {{alertTitle}}</h2>
+    <div class="split">
+      <div>
+        <p class="section-lead">{{alertText}}</p>
+        <ul class="facts">
+          <li>{{alertFact1}}</li>
+          <li>{{alertFact2}}</li>
+          <li>{{alertFact3}}</li>
+        </ul>
+      </div>
+      <div class="deck-frame small"><div class="deck" id="alert-deck" role="img" aria-label="{{alertAria}}"></div></div>
+    </div>
+  </section>
+
+  <section class="wrap" id="devices" aria-labelledby="dev-title">
+    <h2 id="dev-title"><span class="hash">##</span> {{devTitle}}</h2>
+    <p class="section-lead">{{devLead}}</p>
+    <ul class="devices">
+{{{devices}}}
+    </ul>
+  </section>
+
+  <section class="wrap" id="install" aria-labelledby="inst-title">
+    <h2 id="inst-title"><span class="hash">##</span> {{instTitle}}</h2>
+    <ol class="steps">
+      <li><span class="n">01</span><h3>{{i1Title}}</h3><p>{{{i1Text}}}</p></li>
+      <li><span class="n">02</span><h3>{{i2Title}}</h3><p>{{{i2Text}}}</p></li>
+      <li><span class="n">03</span><h3>{{i3Title}}</h3><p>{{{i3Text}}}</p></li>
+    </ol>
+    <ul class="facts">
+      <li>{{req1}}</li>
+      <li>{{req2}}</li>
+      <li>{{req3}}</li>
+      <li>{{req4}}</li>
+    </ul>
+    <div class="cta install-cta">
+      <a class="btn" href="https://github.com/make-mcp/claude-deck/releases/latest">{{download}}</a>
+      <span class="hint">{{marketplace}}</span>
+    </div>
+  </section>
+
+  <section class="wrap" id="privacy" aria-labelledby="priv-title">
+    <h2 id="priv-title"><span class="hash">##</span> {{privTitle}}</h2>
+    <ul class="checks">
+      <li>{{{p1}}}</li>
+      <li>{{{p2}}}</li>
+      <li>{{{p3}}}</li>
+      <li>{{{p4}}}</li>
+    </ul>
+    <p class="hint">{{{contrib}}}</p>
+  </section>
+</main>
+
+<footer class="foot">
+  <div class="wrap foot-inner">
+    <span><span class="lamp" aria-hidden="true"><i></i><i></i><i></i></span> {{footer}}</span>
+    <span class="foot-links">
+      <a href="https://github.com/make-mcp/claude-deck">GitHub</a>
+      <a href="https://web-workers.com/">Web-Workers</a>
+      <a href="{{impressum}}">{{legalNotice}}</a>
+      <a href="{{datenschutz}}">{{privacy}}</a>
+    </span>
+  </div>
+  <nav class="wrap foot-langs" aria-label="{{langsLabel}}">{{{langFoot}}}</nav>
+  <p class="wrap disclaimer">{{disclaimer}}</p>
+</footer>
+
+<script src="{{up}}main.js?v={{vJs}}"></script>
+</body>
+</html>

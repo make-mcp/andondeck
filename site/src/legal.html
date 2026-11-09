@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="{{lang}}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{title}} – Andon Deck</title>
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#141413">
+<link rel="icon" href="favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="style.css?v={{vCss}}">
+</head>
+<body>
+<header class="top">
+  <nav class="wrap nav" aria-label="{{navLabel}}">
+    <a class="brand" href="{{home}}"><span class="lamp" aria-hidden="true"><i></i><i></i><i></i></span> andon deck</a>
+    <div class="links"><a href="{{home}}">← {{back}}</a></div>
+  </nav>
+</header>
+<main class="wrap legal">
+{{{body}}}
+<p class="hint legal-langs">{{{legalLangs}}}</p>
+</main>
+<footer class="foot">
+  <div class="wrap foot-inner">
+    <span><span class="lamp" aria-hidden="true"><i></i><i></i><i></i></span> {{footer}}</span>
+    <span class="foot-links"><a href="{{impressum}}">{{legalNotice}}</a><a href="{{datenschutz}}">{{privacy}}</a></span>
+  </div>
+</footer>
+</body>
+</html>
