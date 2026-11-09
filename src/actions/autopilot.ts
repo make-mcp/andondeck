@@ -36,6 +36,7 @@ export class AutopilotAction extends DeckAction<AutopilotSettings> {
 			await key.setImage(
 				tile({
 					family: "control",
+					ghost: "sleep",
 					tone: "accent",
 					// Two autopilot keys on one deck must not look alike while both are
 					// off, so the scope is the headline and "off" the caption.

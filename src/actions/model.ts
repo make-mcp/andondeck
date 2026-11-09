@@ -48,6 +48,7 @@ export class ModelAction extends DeckAction<ModelSettings> {
 		await key.setImage(
 			tile({
 				family: "control",
+				ghost: "stand",
 				tone: session ? "accent" : "offline",
 				eyebrow: target ? `Switch to ${target}` : "Model",
 				headline: shortName(session?.model),

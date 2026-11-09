@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 
 import sharp from "sharp";
 
-import { PALETTE, compactNumber, duration, fit, tile } from "../.test-build/ui/render.js";
+import { PALETTE, compactNumber, duration, fit, setGhosts, tile } from "../.test-build/ui/render.js";
 
 /**
  * Decodes a key image and renders it.
@@ -31,6 +31,31 @@ describe("key artwork", () => {
 			const info = await render(tile({ tone, glyph: "●", title: "Working", subtitle: "acme-api" }));
 			assert.equal(info.width, 72);
 			assert.equal(info.height, 72);
+		}
+	});
+
+	it("puts a faint Clawd behind action keys, and only there", async () => {
+		const svg = (options) => Buffer.from(tile(options).split(",")[1], "base64").toString("utf8");
+		const hasGhost = (options) => svg(options).includes('opacity="0.13"');
+
+		for (const family of ["allow", "always", "deny", "control", "queue", "launch", "session"]) {
+			assert.ok(hasGhost({ family, tone: "accent", headline: "Key" }), family);
+			await render(tile({ family, tone: "accent", headline: "Key" }));
+		}
+		for (const pose of ["stand", "walk", "wave", "cheer", "droop", "sleep"]) {
+			assert.ok(hasGhost({ tone: "accent", headline: "Key", ghost: pose }), pose);
+		}
+
+		assert.ok(!hasGhost({ family: "meter", tone: "accent", headline: "42%" }), "meters stay plain");
+		assert.ok(!hasGhost({ family: "allow", tone: "waiting", headline: "Allow", solid: true }), "flooded keys stay plain");
+		assert.ok(!hasGhost({ family: "allow", tone: "accent", headline: "Allow", ghost: false }), "opted out");
+		assert.ok(!hasGhost({ family: "session", tone: "idle", headline: "Idle", mascot: "idle" }), "one Clawd per key");
+
+		setGhosts(false);
+		try {
+			assert.ok(!hasGhost({ family: "allow", tone: "accent", headline: "Allow" }), "switched off");
+		} finally {
+			setGhosts(true);
 		}
 	});
 

@@ -114,6 +114,12 @@ look:
 Colour is reserved for machine state. Keys you press are graphite, so a lit key in a row always means
 Claude is telling you something rather than Stream Deck decorating a button.
 
+Session and status keys show Clawd, Claude Code's mascot, posed for the state: walking while Claude works,
+a hand raised while it waits on you, asleep when idle. Action keys carry a faint Clawd behind their words,
+posed for what they do: cheering on Allow, arms hanging on Deny, a hand up on Stop, walking on queue and
+launch keys, asleep on Autopilot. Meters stay plain so their numbers have the whole key. Untick **Mascot**
+under **Connect Claude Code** for plain keys everywhere.
+
 ## Install
 
 ### From source

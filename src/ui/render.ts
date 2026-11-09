@@ -95,34 +95,79 @@ const CLAWD_LEGS = {
 	stepB: ".C..C.......C..C.",
 };
 
-/**
- * Draws Clawd.
- * @param mood Pose and colour.
- * @param phase 0–1 animation position.
- * @param cx Horizontal centre.
- * @param top Top edge.
- * @param cell Size of one pixel cell.
- * @returns SVG markup.
- */
-export function clawd(mood: Mood, phase: number, cx: number, top: number, cell: number): string {
-	const body = mood === "offline" ? "#5E5852" : mood === "error" ? "#D1483F" : CLAWD;
-	const eye = "#14110F";
-	const walking = mood === "working";
-	const step = Math.floor(phase * 4) % 2 === 0;
-	// A one-cell bob while working; perfectly still otherwise.
-	const y0 = top + (walking && step ? -cell * 0.5 : 0);
-	const x0 = cx - (17 * cell) / 2;
+/** What Clawd is doing with arms, legs and eyes. */
+export type Pose =
+	/** Arms out, standing still. */
+	| "stand"
+	/** Mid-stride. */
+	| "walk"
+	/** Right hand up: a hello, or "hold on". */
+	| "wave"
+	/** Both hands up. */
+	| "cheer"
+	/** Arms hanging, eyes half shut. */
+	| "droop"
+	/** Eyes closed, a "z" above. */
+	| "sleep";
 
-	const rows = CLAWD_BODY.map((row, index) => {
-		// Waiting: the right arm goes up, like a hand raised for attention.
-		if (mood === "waiting" && (index === 4 || index === 5)) {
-			return "CCCCCCCCCCCCCCC..";
-		}
-		return row;
-	});
-	const legs = walking ? (step ? CLAWD_LEGS.stepA : CLAWD_LEGS.stepB) : CLAWD_LEGS.still;
+/** Pose and colour for each session state. */
+const MOOD_LOOK: Record<Mood, { pose: Pose; body: string; z?: boolean }> = {
+	working: { pose: "walk", body: CLAWD },
+	waiting: { pose: "wave", body: CLAWD },
+	idle: { pose: "sleep", body: CLAWD },
+	error: { pose: "stand", body: "#D1483F" },
+	// Eyes shut, but no "z": switched off, not resting.
+	offline: { pose: "sleep", body: "#5E5852", z: false },
+};
+
+type Cells = { rows: string[]; extra: [number, number, number, number][]; eyes: "open" | "closed" | "half" };
+
+/**
+ * Lays out the 17 × 10 cells of one pose.
+ * @param pose The pose.
+ * @param step Which foot is forward, for a walk.
+ */
+function cells(pose: Pose, step: boolean): Cells {
+	// Arms gone from the sides; poses that move them draw them back as extras.
+	const armless = "..CCCCCCCCCCCCC..";
+	const rightOnly = "CCCCCCCCCCCCCCC..";
+	const rows = [...CLAWD_BODY];
+	const extra: Cells["extra"] = [];
+
+	switch (pose) {
+		case "wave":
+			rows[4] = rows[5] = rightOnly;
+			extra.push([15, 3, 2, 2], [16, 0, 1, 3]);
+			break;
+		case "cheer":
+			rows[4] = rows[5] = armless;
+			extra.push([0, 3, 2, 2], [0, 0, 1, 3], [15, 3, 2, 2], [16, 0, 1, 3]);
+			break;
+		case "droop":
+			rows[4] = rows[5] = armless;
+			extra.push([1, 4, 1, 1], [0, 5, 1, 3], [15, 4, 1, 1], [16, 5, 1, 3]);
+			break;
+		default:
+			break;
+	}
+
+	const legs = pose === "walk" ? (step ? CLAWD_LEGS.stepA : CLAWD_LEGS.stepB) : CLAWD_LEGS.still;
 	rows.push(legs, legs);
 
+	return { rows, extra, eyes: pose === "sleep" ? "closed" : pose === "droop" ? "half" : "open" };
+}
+
+/**
+ * Renders a pose as crisp cells.
+ * @param look Pose, body colour, eye colour (`null` cuts the eyes out), and
+ *   whether a sleeping pose gets its "z".
+ * @param x0 Left edge.
+ * @param y0 Top edge.
+ * @param cell Size of one cell.
+ * @param step Which foot is forward, for a walk.
+ */
+function drawPose(look: { pose: Pose; body: string; eye: string | null; z?: boolean }, x0: number, y0: number, cell: number, step: boolean): string {
+	const { rows, extra, eyes } = cells(look.pose, step);
 	const rects: string[] = [];
 	const add = (x: number, y: number, w: number, h: number, fill: string) =>
 		rects.push(`<rect x="${(x0 + x * cell).toFixed(2)}" y="${(y0 + y * cell).toFixed(2)}" width="${(w * cell + 0.05).toFixed(2)}" height="${(h * cell + 0.05).toFixed(2)}" fill="${fill}"/>`);
@@ -130,32 +175,87 @@ export function clawd(mood: Mood, phase: number, cx: number, top: number, cell: 
 	rows.forEach((row, y) => {
 		[...row].forEach((ch, x) => {
 			if (ch === "C") {
-				add(x, y, 1, 1, body);
-			} else if (ch === "E") {
-				add(x, y, 1, 1, body);
-				// Asleep or offline: the eyes close to a thin line.
-				const closed = mood === "idle" || mood === "offline";
-				if (!closed) {
-					add(x, y, 1, 1, eye);
-				} else if (y === 3) {
-					rects.push(`<rect x="${(x0 + (x - 0.3) * cell).toFixed(2)}" y="${(y0 + (y + 0.35) * cell).toFixed(2)}" width="${(cell * 1.6).toFixed(2)}" height="${(cell * 0.45).toFixed(2)}" fill="${eye}"/>`);
+				add(x, y, 1, 1, look.body);
+				return;
+			}
+			if (ch !== "E") {
+				return;
+			}
+
+			// Eyes are two cells tall. Closed, they shrink to a line on the lower
+			// cell; half shut, only the lower cell stays dark.
+			const lower = y === 3;
+			if (eyes === "open" || (eyes === "half" && lower)) {
+				if (look.eye) {
+					add(x, y, 1, 1, look.eye);
 				}
+				return;
+			}
+
+			// Without an eye colour, a closed eye is just the gap of its lower cell.
+			if (!look.eye && eyes === "closed" && lower) {
+				return;
+			}
+			add(x, y, 1, 1, look.body);
+			if (look.eye && eyes === "closed" && lower) {
+				rects.push(`<rect x="${(x0 + (x - 0.3) * cell).toFixed(2)}" y="${(y0 + (y + 0.35) * cell).toFixed(2)}" width="${(cell * 1.6).toFixed(2)}" height="${(cell * 0.45).toFixed(2)}" fill="${look.eye}"/>`);
 			}
 		});
 	});
 
-	if (mood === "waiting") {
-		// The raised arm, straight up from the shoulder.
-		add(15, 3, 2, 2, body);
-		add(16, 0, 1, 3, body);
+	for (const [x, y, w, h] of extra) {
+		add(x, y, w, h, look.body);
 	}
 
-	if (mood === "idle") {
-		// Resting: a small "z" drifting above.
-		rects.push(`<text x="${(x0 + 17.5 * cell).toFixed(2)}" y="${(y0 - 0.3 * cell).toFixed(2)}" font-family="${FONT}" font-size="${(cell * 3).toFixed(1)}" font-weight="700" fill="${body}" opacity=".8">z</text>`);
+	if (look.pose === "sleep" && look.z !== false) {
+		rects.push(`<text x="${(x0 + 17.5 * cell).toFixed(2)}" y="${(y0 - 0.3 * cell).toFixed(2)}" font-family="${FONT}" font-size="${(cell * 3).toFixed(1)}" font-weight="700" fill="${look.body}" opacity=".8">z</text>`);
 	}
 
-	return `<g shape-rendering="crispEdges">${rects.join("")}</g>`;
+	return rects.join("");
+}
+
+/**
+ * Draws Clawd as the face of a session key.
+ * @param mood Session state, which picks pose and colour.
+ * @param phase 0–1 animation position.
+ * @param cx Horizontal centre.
+ * @param top Top edge.
+ * @param cell Size of one pixel cell.
+ * @returns SVG markup.
+ */
+export function clawd(mood: Mood, phase: number, cx: number, top: number, cell: number): string {
+	const look = MOOD_LOOK[mood];
+	const walking = look.pose === "walk";
+	const step = Math.floor(phase * 4) % 2 === 0;
+	// A one-cell bob while working; perfectly still otherwise.
+	const y0 = top + (walking && step ? -cell * 0.5 : 0);
+	const x0 = cx - (17 * cell) / 2;
+
+	return `<g shape-rendering="crispEdges">${drawPose({ ...look, eye: "#14110F" }, x0, y0, cell, step)}</g>`;
+}
+
+/** How strongly the background Clawd shows through. */
+const GHOST_OPACITY = 0.13;
+
+/**
+ * Clawd as a watermark behind a key's words.
+ *
+ * Big, still and faint: it gives a key character without competing with what
+ * the key says. One flat colour with the eyes cut out, so it reads as a shape
+ * rather than as a second thing to look at.
+ * @param pose The pose.
+ * @param color Colour of the shape.
+ * @returns SVG markup.
+ */
+export function ghost(pose: Pose, color: string): string {
+	const cell = 2.9;
+	const x0 = 36 - (17 * cell) / 2;
+	// Standing on the bottom border, so the raised arms and the head clear
+	// most headlines and the pose still reads.
+	const y0 = 69 - 10 * cell;
+	// No "z" here: at this size it would poke out of the key.
+	const shapes = drawPose({ pose, body: color, eye: null, z: false }, x0, y0, cell, true);
+	return `<g shape-rendering="crispEdges" opacity="${GHOST_OPACITY}">${shapes}</g>`;
 }
 
 /** Perimeter of the 72-unit rounded square the border traces. */
@@ -259,7 +359,33 @@ export type TileOptions = {
 	mascot?: Mood;
 	/** Draws a small chart under the headline, in place of the caption. */
 	chart?: ChartData;
+	/**
+	 * Faint Clawd behind the words. Defaults to the family's pose; `false`
+	 * leaves the key plain.
+	 */
+	ghost?: Pose | false;
 };
+
+/**
+ * The background pose each family of keys gets unless it asks for another.
+ * Meters have none: their numbers and charts need the whole key.
+ */
+const FAMILY_POSE: Partial<Record<TileFamily, Pose>> = {
+	allow: "cheer",
+	always: "cheer",
+	deny: "droop",
+	control: "wave",
+	queue: "walk",
+	launch: "walk",
+	session: "wave",
+};
+
+let ghostsEnabled = true;
+
+/** Turns the background Clawd on or off on every key. */
+export function setGhosts(enabled: boolean): void {
+	ghostsEnabled = enabled;
+}
 
 /** A series small enough for a key: a week of days, half a day of hours. */
 export type ChartData = {
@@ -470,6 +596,12 @@ export function tile(options: TileOptions): string {
 	const chart = options.chart;
 	const hasBottom = Boolean(options.subtitle) && !mascot && !chart;
 
+	// A flooded key is interrupting; a watermark would only muddy it.
+	const pose =
+		!ghostsEnabled || solid || mascot || chart || options.ghost === false
+			? undefined
+			: (options.ghost ?? (options.family ? FAMILY_POSE[options.family] : undefined));
+
 	const hue = options.family && !solid ? FAMILY[options.family] : undefined;
 	const top = hasTop ? text({ text: options.eyebrow!, size: 9, color: hue ?? dim, weight: 650, y: 14 }) : "";
 	const bottomY = options.progress === undefined ? 65 : 59;
@@ -538,6 +670,7 @@ export function tile(options: TileOptions): string {
 				? `<defs><linearGradient id="h" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${hue}" stop-opacity=".42"/><stop offset=".75" stop-color="${hue}" stop-opacity=".1"/></linearGradient></defs><rect width="72" height="72" rx="9" fill="url(#h)"/>`
 				: ""
 		}
+		${pose ? ghost(pose, hue ?? PALETTE.ink) : ""}
 		${solid ? "" : edge(options.edge ?? "quiet", hue && (options.edge ?? "quiet") === "quiet" ? hue : tone, phase)}
 		${top}
 		${mascot ? clawd(mascot, phase, 36, 46, 2.2) : ""}

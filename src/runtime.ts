@@ -16,6 +16,7 @@ import {
 } from "./claude/hooks.js";
 import { helperPath } from "./claude/helpers.js";
 import { PlanTrend, UsageHistory } from "./claude/history.js";
+import { setGhosts } from "./ui/render.js";
 import {
 	claudeHome,
 	detectClaudeLocations,
@@ -61,6 +62,8 @@ export type GlobalSettings = {
 	autoCompactK: string;
 	/** Read plan limits from Claude Code's status line, chaining any existing one. */
 	planLimits: boolean;
+	/** Faint Clawd in the background of action keys. */
+	ghosts: boolean;
 	[key: string]: JsonValue;
 };
 
@@ -79,6 +82,7 @@ const DEFAULTS: GlobalSettings = {
 	settingsOverride: "",
 	autoCompactK: "",
 	planLimits: true,
+	ghosts: true,
 };
 
 export type RuntimeEvents = {
@@ -131,6 +135,7 @@ class Runtime extends EventEmitter<RuntimeEvents> {
 	async #start(): Promise<void> {
 		const stored = await streamDeck.settings.getGlobalSettings<Partial<GlobalSettings>>();
 		this.#settings = { ...DEFAULTS, ...stored };
+		setGhosts(this.#settings.ghosts !== false);
 
 		if (!this.#settings.token) {
 			this.#settings.token = randomBytes(24).toString("base64url");
@@ -251,7 +256,13 @@ class Runtime extends EventEmitter<RuntimeEvents> {
 
 		const compactChanged = merged.autoCompactK !== this.#settings.autoCompactK;
 		const limitsChanged = merged.planLimits !== this.#settings.planLimits;
+		const ghostsChanged = merged.ghosts !== this.#settings.ghosts;
 		this.#settings = merged;
+
+		if (ghostsChanged) {
+			setGhosts(merged.ghosts !== false);
+			this.emit("change");
+		}
 
 		// The status line relay is written alongside the hooks, so re-run that.
 		if (limitsChanged && this.#settings.hooksInstalled) {
