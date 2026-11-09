@@ -126,6 +126,18 @@ describe("status line relay", () => {
 		assert.deepEqual(JSON.parse(await readFile(settingsPath, "utf8")).statusLine, mine);
 	});
 
+	it("learns a session and its model from the status line alone", async () => {
+		const response = await fetch(`http://127.0.0.1:${port}/status`, {
+			method: "POST",
+			headers: { "content-type": "application/json", "x-claude-deck-token": TOKEN },
+			body: JSON.stringify({ session_id: "fresh", cwd: "/work/app", model: { id: "claude-opus-5-5", display_name: "Opus" } }),
+		});
+		assert.equal(response.status, 200);
+		const session = bridge.store.get("fresh");
+		assert.equal(session?.model, "claude-opus-5-5");
+		assert.equal(session?.project, "app");
+	});
+
 	it("removes the slot again when there was no status line before", async () => {
 		const { settingsPath, location, options } = await scratch(`http://127.0.0.1:${port}`);
 		await installHooks(options());

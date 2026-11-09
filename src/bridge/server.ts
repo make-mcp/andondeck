@@ -581,7 +581,20 @@ export class Bridge extends EventEmitter<BridgeEvents> {
 		this.#statusSeen = true;
 
 		const sessionId = typeof input.session_id === "string" ? input.session_id : undefined;
-		const session = sessionId ? this.store.get(sessionId) : undefined;
+		const workspace = input.workspace as { current_dir?: string; project_dir?: string } | undefined;
+		const cwd = typeof input.cwd === "string" ? input.cwd : workspace?.project_dir ?? workspace?.current_dir;
+		// The status line runs from the first moment a session is open, so it also
+		// introduces sessions the deck has not heard a hook from yet — after a
+		// plugin restart, for example.
+		const session = sessionId ? (this.store.get(sessionId) ?? this.store.upsert(sessionId, cwd)) : undefined;
+
+		const model = input.model as { id?: string; display_name?: string } | undefined;
+		if (session && typeof model?.id === "string" && model.id) {
+			session.model = model.id;
+		}
+		if (session && !session.transcriptPath && typeof input.transcript_path === "string") {
+			session.transcriptPath = input.transcript_path;
+		}
 		const context = input.context_window as
 			| { context_window_size?: number; current_usage?: Record<string, number> | null }
 			| undefined;

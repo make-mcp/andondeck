@@ -3,6 +3,7 @@ import type { JsonObject } from "@elgato/utils";
 
 import { DeckAction, type AnyAction, type SessionScoped } from "./base.js";
 import { runtime } from "../runtime.js";
+import { writeClipboard } from "../system/clipboard.js";
 import { tile } from "../ui/render.js";
 
 type ModelSettings = SessionScoped & {
@@ -64,11 +65,12 @@ export class ModelAction extends DeckAction<ModelSettings> {
 			return;
 		}
 
+		// Claude Code runs /model only when typed at its own prompt; no hook can
+		// switch it. Leave the command ready to paste rather than pretend.
 		const target = settings.model || this.#next(session.model);
-		runtime.store.enqueue(`/model ${target}`, settings.session, `model ${target}`);
-
-		await ev.action.showOk();
-		this.repaint();
+		const command = `/model ${target}`;
+		const copied = await writeClipboard(command);
+		await this.refuse(ev.action, copied ? `Copied ${command} — paste it` : `Type ${command}`);
 	}
 
 	/** Picks the next alias after the one currently in use. */

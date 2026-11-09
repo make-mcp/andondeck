@@ -24,8 +24,10 @@
 			<sdpi-select setting="session" datasource="getSessions" placeholder="Active session"></sdpi-select>
 		</sdpi-item>
 		<div class="hint">
-			The key shows the model the session is using now. Switching is sent as <code>/model</code> through the
-			queue, so it lands at the next turn boundary rather than mid-turn.
+			The key shows the model the session is using now. Claude Code only switches models when
+			<code>/model</code> is typed at its own prompt, so pressing this key copies the command to paste. For a
+			one-press switch, use Stream Deck's built-in <strong>Text</strong> action with <code>/model sonnet</code> and
+			"Send Enter" while the terminal has focus.
 		</div>
 	</body>
 </html>
