@@ -3,7 +3,7 @@ import type { JsonObject } from "@elgato/utils";
 
 import { DeckAction, animationPhase, type AnyAction, type SessionScoped } from "./base.js";
 import { runtime } from "../runtime.js";
-import { duration, tile, type EdgeMotion, type TileTone } from "../ui/render.js";
+import { duration, tile, type EdgeMotion, type TileTone, MOODS } from "../ui/render.js";
 import type { SessionState, SessionStatus } from "../bridge/types.js";
 
 type StatusSettings = SessionScoped & {
@@ -11,6 +11,8 @@ type StatusSettings = SessionScoped & {
 	showProject?: boolean;
 	/** Show the tool Claude is currently running. */
 	showTool?: boolean;
+	/** Draw Clawd under the state word; off shows the tool and timer instead. */
+	mascot?: boolean;
 	/** Show the session's permission mode across the top of the key. */
 	showPermissionMode?: boolean;
 } & JsonObject;
@@ -91,6 +93,7 @@ export class StatusAction extends DeckAction<StatusSettings> {
 			await key.setImage(
 				tile({
 					tone: "offline",
+					mascot: settings.mascot === false ? undefined : "offline",
 					headline: "No session",
 					subtitle: runtime.settings.hooksInstalled ? "Start Claude Code" : "Not connected",
 				}),
@@ -135,8 +138,11 @@ export class StatusAction extends DeckAction<StatusSettings> {
 			headlineTone: "state" as const,
 			subtitle,
 			badge: session.queue.length > 0 ? session.queue.length : undefined,
+			mascot: settings.mascot === false ? undefined : MOODS[session.status],
 			progress:
-				session.status === "waiting" && session.pending
+				settings.mascot !== false
+					? undefined
+					: session.status === "waiting" && session.pending
 					? Math.max(0, (session.pending.expiresAt - Date.now()) / (session.pending.expiresAt - session.pending.receivedAt))
 					: undefined,
 		} as const;

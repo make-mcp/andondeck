@@ -63,6 +63,96 @@ export const FAMILY = {
 
 export type TileFamily = keyof typeof FAMILY;
 
+/** How the mascot carries itself, mirroring the session state. */
+export type Mood = "working" | "waiting" | "idle" | "error" | "offline";
+
+/** Clawd's body colour, as Claude Code itself draws it. */
+const CLAWD = "#D77757";
+
+/**
+ * Clawd, Claude Code's mascot, in its neutral pose.
+ *
+ * Taken from the pixel map Claude Code ships (`C` body, `E` eye), squared up
+ * so both arms rest at the sides. 17 × 7 cells.
+ */
+const CLAWD_BODY = [
+	"..CCCCCCCCCCCCC..",
+	"..CCCCCCCCCCCCC..",
+	"..CCCECCCCCECCC..",
+	"..CCCECCCCCECCC..",
+	"CCCCCCCCCCCCCCCCC",
+	"..CCCCCCCCCCCCC..",
+];
+
+/** Leg rows: still, and the two steps of a walk. */
+const CLAWD_LEGS = {
+	still: "..C.C.......C.C..",
+	stepA: "..C..C.....C..C..",
+	stepB: ".C..C.......C..C.",
+};
+
+/**
+ * Draws Clawd.
+ * @param mood Pose and colour.
+ * @param phase 0–1 animation position.
+ * @param cx Horizontal centre.
+ * @param top Top edge.
+ * @param cell Size of one pixel cell.
+ * @returns SVG markup.
+ */
+export function clawd(mood: Mood, phase: number, cx: number, top: number, cell: number): string {
+	const body = mood === "offline" ? "#5E5852" : mood === "error" ? "#D1483F" : CLAWD;
+	const eye = "#14110F";
+	const walking = mood === "working";
+	const step = Math.floor(phase * 4) % 2 === 0;
+	// A one-cell bob while working; perfectly still otherwise.
+	const y0 = top + (walking && step ? -cell * 0.5 : 0);
+	const x0 = cx - (17 * cell) / 2;
+
+	const rows = CLAWD_BODY.map((row, index) => {
+		// Waiting: the right arm goes up, like a hand raised for attention.
+		if (mood === "waiting" && index === 4) {
+			return "CCCCCCCCCCCCCCC..";
+		}
+		return row;
+	});
+	rows.push(walking ? (step ? CLAWD_LEGS.stepA : CLAWD_LEGS.stepB) : CLAWD_LEGS.still);
+
+	const rects: string[] = [];
+	const add = (x: number, y: number, w: number, h: number, fill: string) =>
+		rects.push(`<rect x="${(x0 + x * cell).toFixed(2)}" y="${(y0 + y * cell).toFixed(2)}" width="${(w * cell + 0.05).toFixed(2)}" height="${(h * cell + 0.05).toFixed(2)}" fill="${fill}"/>`);
+
+	rows.forEach((row, y) => {
+		[...row].forEach((ch, x) => {
+			if (ch === "C") {
+				add(x, y, 1, 1, body);
+			} else if (ch === "E") {
+				add(x, y, 1, 1, body);
+				// Asleep or offline: the eyes close to a thin line.
+				const closed = mood === "idle" || mood === "offline";
+				if (!closed) {
+					add(x, y, 1, 1, eye);
+				} else if (y === 3) {
+					rects.push(`<rect x="${(x0 + (x - 0.3) * cell).toFixed(2)}" y="${(y0 + (y + 0.35) * cell).toFixed(2)}" width="${(cell * 1.6).toFixed(2)}" height="${(cell * 0.45).toFixed(2)}" fill="${eye}"/>`);
+				}
+			}
+		});
+	});
+
+	if (mood === "waiting") {
+		// The raised arm, straight up from the shoulder.
+		add(15, 3, 2, 1, body);
+		add(16, 0, 1, 3, body);
+	}
+
+	if (mood === "idle") {
+		// Resting: a small "z" drifting above.
+		rects.push(`<text x="${(x0 + 17.5 * cell).toFixed(2)}" y="${(y0 - 0.3 * cell).toFixed(2)}" font-family="${FONT}" font-size="${(cell * 3).toFixed(1)}" font-weight="700" fill="${body}" opacity=".8">z</text>`);
+	}
+
+	return `<g shape-rendering="crispEdges">${rects.join("")}</g>`;
+}
+
 /** Perimeter of the 72-unit rounded square the border traces. */
 const PERIMETER = 2 * (72 - 2 * 9) + 2 * Math.PI * 9;
 
@@ -160,6 +250,8 @@ export type TileOptions = {
 	phase?: number;
 	/** Tints the key with its family colour; see {@link FAMILY}. */
 	family?: TileFamily;
+	/** Puts Clawd under the headline, in place of the caption. */
+	mascot?: Mood;
 };
 
 type TextLine = { text: string; size: number; color: string; weight: number; y: number };
@@ -302,7 +394,8 @@ export function tile(options: TileOptions): string {
 	// all of them, which is exactly what makes it unreadable at arm's length.
 	const headline = options.headline ?? options.title;
 	const hasTop = Boolean(options.eyebrow);
-	const hasBottom = Boolean(options.subtitle);
+	const mascot = options.mascot;
+	const hasBottom = Boolean(options.subtitle) && !mascot;
 
 	const hue = options.family && !solid ? FAMILY[options.family] : undefined;
 	const top = hasTop ? text({ text: options.eyebrow!, size: 9, color: hue ?? dim, weight: 650, y: 14 }) : "";
@@ -320,7 +413,7 @@ export function tile(options: TileOptions): string {
 	// The middle band gets whatever the other two leave, and the headline is
 	// sized to fill it rather than to fit around a mark.
 	const bandTop = hasTop ? 19 : 8;
-	const bandBottom = hasBottom ? bottomY - 13 : options.progress === undefined ? 66 : 58;
+	const bandBottom = mascot ? 44 : hasBottom ? bottomY - 13 : options.progress === undefined ? 66 : 58;
 
 	let middle = "";
 	if (headline) {
@@ -374,6 +467,7 @@ export function tile(options: TileOptions): string {
 		}
 		${solid ? "" : edge(options.edge ?? "quiet", hue && (options.edge ?? "quiet") === "quiet" ? hue : tone, phase)}
 		${top}
+		${mascot ? clawd(mascot, phase, 36, 47, 2.6) : ""}
 		${middle}
 		${bottom}
 		${bar}
@@ -407,3 +501,13 @@ export function compactNumber(value: number): string {
 	}
 	return `${(value / 1_000_000).toFixed(1)}M`;
 }
+
+/** Clawd's pose for each session state. */
+export const MOODS: Record<"idle" | "working" | "compacting" | "waiting" | "error" | "ended", Mood> = {
+	idle: "idle",
+	working: "working",
+	compacting: "working",
+	waiting: "waiting",
+	error: "error",
+	ended: "offline",
+};

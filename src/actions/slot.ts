@@ -3,7 +3,7 @@ import type { JsonObject } from "@elgato/utils";
 
 import { DeckAction, animationPhase, type AnyAction } from "./base.js";
 import { runtime } from "../runtime.js";
-import { duration, tile, type EdgeMotion, type TileTone } from "../ui/render.js";
+import { duration, tile, type EdgeMotion, type TileTone, MOODS } from "../ui/render.js";
 import type { SessionStatus } from "../bridge/types.js";
 
 type SlotSettings = {
@@ -11,6 +11,8 @@ type SlotSettings = {
 	index?: number;
 	/** Pressing pins the session for the rest of the deck instead of approving. */
 	press?: "pin" | "approve";
+	/** Draw Clawd under the state word; off shows the tool and timer instead. */
+	mascot?: boolean;
 } & JsonObject;
 
 const TONES: Record<SessionStatus, TileTone> = {
@@ -66,7 +68,11 @@ export class SlotAction extends DeckAction<SlotSettings> {
 		const session = runtime.store.ordered()[index];
 
 		if (!session) {
-			await key.setImage(tile({ tone: "offline", eyebrow: `Slot ${index + 1}`, subtitle: "No session" }));
+			await key.setImage(
+				settings.mascot === false
+					? tile({ tone: "offline", eyebrow: `Slot ${index + 1}`, subtitle: "No session" })
+					: tile({ tone: "offline", eyebrow: `Slot ${index + 1}`, headline: "Empty", mascot: "offline" }),
+			);
 			return;
 		}
 
@@ -88,6 +94,7 @@ export class SlotAction extends DeckAction<SlotSettings> {
 							? [session.currentTool, elapsed ? duration(elapsed) : undefined].filter(Boolean).join("  ")
 							: undefined,
 				badge: session.queue.length || undefined,
+				mascot: settings.mascot === false ? undefined : MOODS[session.status],
 			}),
 		);
 	}
