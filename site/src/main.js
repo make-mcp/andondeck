@@ -39,12 +39,8 @@ function deckPainter(el, count, images) {
 async function start() {
   const deckEl = document.getElementById("deck");
   if (!deckEl) return;
-  let data;
-  try {
-    data = await (await fetch(document.body.dataset.demo)).json();
-  } catch {
-    return;
-  }
+  const data = window.ANDON_DEMO;
+  if (!data) return;
   const images = data.images.map(uri);
 
   // ---- the demo deck ---------------------------------------------------

@@ -289,7 +289,9 @@ async function build() {
 	// Demo data: one image table, scenes and legend as indices into it.
 	const demo = { images: table, scenes: SCENES, legend: LEGEND, alert: ALERT };
 	const demoJson = JSON.stringify(demo);
-	await writeFile(join(out, "assets/demo.json"), demoJson);
+	// A script rather than JSON: it loads under file:// too, where fetch() is
+	// blocked, and the CSP allows it as a same-origin script.
+	await writeFile(join(out, "assets/demo.js"), `window.ANDON_DEMO=${demoJson};\n`);
 
 	// Static images: OG card, the dial strip, the marketplace icon.
 	const og = await ogImage();
