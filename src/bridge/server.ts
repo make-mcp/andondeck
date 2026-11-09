@@ -62,6 +62,8 @@ export type BridgeEvents = {
 	change: [];
 	notify: [{ title: string; body: string; session: SessionState }];
 	log: [string];
+	/** A fresh plan-limit reading from the status line. */
+	limits: [PlanLimits];
 };
 
 /**
@@ -575,6 +577,7 @@ export class Bridge extends EventEmitter<BridgeEvents> {
 				this.emit("log", `plan limits: 5h ${limits.fiveHour?.usedPercent ?? "—"}%, week ${limits.sevenDay?.usedPercent ?? "—"}%`);
 			}
 			this.planLimits = limits;
+			this.emit("limits", limits);
 		} else if (!this.#statusSeen) {
 			this.emit("log", "status line connected (no plan limits reported — API key or first response pending)");
 		}

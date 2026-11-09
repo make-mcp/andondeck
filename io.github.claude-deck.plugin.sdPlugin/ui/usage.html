@@ -16,6 +16,8 @@
 				<option value="context">Context pressure</option>
 				<option value="plan5h">Plan limit · 5 hours</option>
 				<option value="planWeek">Plan limit · week</option>
+				<option value="today">Tokens today · by hour</option>
+				<option value="week">Tokens this week · by day</option>
 				<option value="tokens">Tokens</option>
 				<option value="tools">Tool calls</option>
 				<option value="busy">Time spent working</option>
@@ -25,6 +27,7 @@
 			<sdpi-select setting="session" datasource="getSessions" placeholder="Active session"></sdpi-select>
 		</sdpi-item>
 		<div class="hint">Token numbers come from the session transcript when the plugin can read it; turns, tool calls and timings always work. Press or rotate to step through the metrics.</div>
+		<div class="hint"><strong>History</strong> charts read every Claude Code transcript from the last week, so they fill in straight away. Counts include cache reads, as Claude Code's own usage figures do. On a dial, plan limits also draw how they moved; the key says when the limit runs out if the current pace holds.</div>
 		<div class="hint"><strong>Plan limits</strong> come from Claude Code's status line and exist only for claude.ai subscriptions (Pro, Max, Team). Claude Deck chains itself in front of any status line you already have, which keeps working unchanged. Turn it off under <strong>Connect Claude Code</strong>.</div>
 	</body>
 </html>

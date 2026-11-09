@@ -1,6 +1,6 @@
 {
   "name": "claude-deck",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "Open-source Stream Deck plugin for Claude Code: live status, prompt queue, permission approvals, slash commands, session switching and usage — straight from your deck.",
   "license": "MIT",
   "author": "claude-deck contributors",

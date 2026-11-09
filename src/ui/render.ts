@@ -257,7 +257,74 @@ export type TileOptions = {
 	family?: TileFamily;
 	/** Puts Clawd under the headline, in place of the caption. */
 	mascot?: Mood;
+	/** Draws a small chart under the headline, in place of the caption. */
+	chart?: ChartData;
 };
+
+/** A series small enough for a key: a week of days, half a day of hours. */
+export type ChartData = {
+	/** Values, oldest first. The last one is "now" and is drawn brightest. */
+	series: number[];
+	/** Bars for counts per period, a line for a level that moves. */
+	kind: "bars" | "line";
+	/** Top of the scale; defaults to the largest value. */
+	max?: number;
+};
+
+/**
+ * Plots a series into a box.
+ * @param chart What to plot.
+ * @param box Left, top, width, height.
+ * @param color Colour of the current value.
+ * @param rail Colour of the baseline and of past values.
+ * @returns SVG markup.
+ */
+export function plot(chart: ChartData, box: [number, number, number, number], color: string, rail: string): string {
+	const [x, y, w, h] = box;
+	const values = chart.series.map((value) => (Number.isFinite(value) ? Math.max(0, value) : 0));
+	const max = Math.max(chart.max ?? 0, ...values, 1e-9);
+	const floor = y + h;
+	const base = `<rect x="${x}" y="${(floor - 0.6).toFixed(2)}" width="${w}" height="0.6" fill="${rail}" opacity=".6"/>`;
+
+	if (values.length === 0) {
+		return base;
+	}
+
+	if (chart.kind === "bars") {
+		const slot = w / values.length;
+		const gap = Math.min(slot * 0.25, 2);
+		return (
+			base +
+			values
+				.map((value, index) => {
+					// A sliver for an empty period still says "nothing happened".
+					const height = value > 0 ? Math.max(1.2, (value / max) * (h - 1)) : 0.6;
+					const current = index === values.length - 1;
+					return `<rect x="${(x + index * slot + gap / 2).toFixed(2)}" y="${(floor - height).toFixed(2)}" width="${(slot - gap).toFixed(2)}" height="${height.toFixed(2)}" rx="${Math.min(1, (slot - gap) / 4).toFixed(2)}" fill="${current ? color : rail}"${current ? "" : ' opacity=".75"'}/>`;
+				})
+				.join("")
+		);
+	}
+
+	const step = values.length > 1 ? w / (values.length - 1) : 0;
+	const points = values.map((value, index) => [x + index * step, floor - (value / max) * (h - 1.5)] as const);
+	const line = points.map(([px, py]) => `${px.toFixed(2)},${py.toFixed(2)}`).join(" ");
+	const [lastX, lastY] = points[points.length - 1];
+	const area = `${x},${floor} ${line} ${lastX.toFixed(2)},${floor}`;
+	// A full-scale guide makes a percentage chart read as "how close to the top".
+	const guide =
+		chart.max !== undefined
+			? `<rect x="${x}" y="${y}" width="${w}" height="0.5" fill="${rail}" opacity=".45"/>`
+			: "";
+
+	return (
+		base +
+		guide +
+		`<polygon points="${area}" fill="${color}" opacity=".18"/>` +
+		`<polyline points="${line}" fill="none" stroke="${color}" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"/>` +
+		`<circle cx="${lastX.toFixed(2)}" cy="${lastY.toFixed(2)}" r="1.9" fill="${color}"/>`
+	);
+}
 
 type TextLine = { text: string; size: number; color: string; weight: number; y: number };
 
@@ -400,7 +467,8 @@ export function tile(options: TileOptions): string {
 	const headline = options.headline ?? options.title;
 	const hasTop = Boolean(options.eyebrow);
 	const mascot = options.mascot;
-	const hasBottom = Boolean(options.subtitle) && !mascot;
+	const chart = options.chart;
+	const hasBottom = Boolean(options.subtitle) && !mascot && !chart;
 
 	const hue = options.family && !solid ? FAMILY[options.family] : undefined;
 	const top = hasTop ? text({ text: options.eyebrow!, size: 9, color: hue ?? dim, weight: 650, y: 14 }) : "";
@@ -418,7 +486,7 @@ export function tile(options: TileOptions): string {
 	// The middle band gets whatever the other two leave, and the headline is
 	// sized to fill it rather than to fit around a mark.
 	const bandTop = hasTop ? 19 : 8;
-	const bandBottom = mascot ? 44 : hasBottom ? bottomY - 13 : options.progress === undefined ? 66 : 58;
+	const bandBottom = mascot ? 44 : chart ? 40 : hasBottom ? bottomY - 13 : options.progress === undefined ? 66 : 58;
 
 	let middle = "";
 	if (headline) {
@@ -473,6 +541,7 @@ export function tile(options: TileOptions): string {
 		${solid ? "" : edge(options.edge ?? "quiet", hue && (options.edge ?? "quiet") === "quiet" ? hue : tone, phase)}
 		${top}
 		${mascot ? clawd(mascot, phase, 36, 46, 2.2) : ""}
+		${chart ? plot(chart, [11, 43, 50, 20], options.tone === "accent" && hue && !solid ? hue : tone, solid ? "rgba(26,21,18,.4)" : "rgba(255,255,255,.22)") : ""}
 		${middle}
 		${bottom}
 		${bar}
@@ -496,7 +565,7 @@ export function duration(ms: number): string {
 		: `${minutes}:${String(seconds).padStart(2, "0")}`;
 }
 
-/** Formats a token count compactly: `940`, `12.4k`, `1.2M`. */
+/** Formats a token count compactly: `940`, `12.4k`, `1.2M`, `115M`, `1.4B`. */
 export function compactNumber(value: number): string {
 	if (value < 1000) {
 		return String(Math.round(value));
@@ -504,7 +573,10 @@ export function compactNumber(value: number): string {
 	if (value < 1_000_000) {
 		return `${(value / 1000).toFixed(value < 10_000 ? 1 : 0)}k`;
 	}
-	return `${(value / 1_000_000).toFixed(1)}M`;
+	if (value < 1_000_000_000) {
+		return `${(value / 1_000_000).toFixed(value < 100_000_000 ? 1 : 0)}M`;
+	}
+	return `${(value / 1_000_000_000).toFixed(1)}B`;
 }
 
 /** Clawd's pose for each session state. */
@@ -516,3 +588,23 @@ export const MOODS: Record<"idle" | "working" | "compacting" | "waiting" | "erro
 	error: "error",
 	ended: "offline",
 };
+
+/**
+ * A dial's segment of the touch strip, drawn whole: label, reading and chart.
+ *
+ * Stream Deck's stock layouts have no chart, so the segment is one picture
+ * placed in a single full-size pixmap (see `layouts/chart.json`).
+ * @returns A data URI for a 200 × 100 image.
+ */
+export function strip(options: { title: string; value: string; subtitle?: string; tone: TileTone; chart: ChartData }): string {
+	const tone = options.tone === "accent" ? FAMILY.meter : PALETTE[options.tone];
+	const clip = (value: string, max: number) => (value.length > max ? `${value.slice(0, max - 1)}…` : value);
+
+	return toDataUri(`<svg xmlns="http://www.w3.org/2000/svg" width="200" height="100" viewBox="0 0 200 100">
+		<rect width="200" height="100" fill="#000"/>
+		<text x="12" y="20" font-family="${FONT}" font-size="14" font-weight="600" fill="${PALETTE.inkDim}">${escapeXml(clip(options.title, 14))}</text>
+		<text x="188" y="20" font-family="${FONT}" font-size="20" font-weight="700" fill="${PALETTE.ink}" text-anchor="end">${escapeXml(clip(options.value, 8))}</text>
+		${plot(options.chart, [12, 32, 176, options.subtitle ? 44 : 58], tone, "rgba(255,255,255,.25)")}
+		${options.subtitle ? `<text x="12" y="94" font-family="${FONT}" font-size="12" font-weight="500" fill="${PALETTE.inkDim}">${escapeXml(clip(options.subtitle, 28))}</text>` : ""}
+	</svg>`);
+}

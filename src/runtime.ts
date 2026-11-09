@@ -1,5 +1,6 @@
 import { randomBytes } from "node:crypto";
 import { EventEmitter } from "node:events";
+import { join, posix } from "node:path";
 
 import streamDeck from "@elgato/streamdeck";
 import type { JsonValue } from "@elgato/utils";
@@ -14,8 +15,11 @@ import {
 	uninstallHooks,
 } from "./claude/hooks.js";
 import { helperPath } from "./claude/helpers.js";
+import { PlanTrend, UsageHistory } from "./claude/history.js";
 import {
+	claudeHome,
 	detectClaudeLocations,
+	localizePath,
 	hasMirroredNetworking,
 	listWslDistros,
 	probeReachability,
@@ -97,6 +101,12 @@ class Runtime extends EventEmitter<RuntimeEvents> {
 	/** Contexts of currently visible Approve actions; approvals are only held while one is on screen. */
 	readonly #approvers = new Set<string>();
 
+	/** Token use per hour and day, read from the transcripts. */
+	public readonly history = new UsageHistory();
+
+	/** Plan-limit readings over time, for trends and projections. */
+	public readonly planTrend = new PlanTrend();
+
 	public get settings(): Readonly<GlobalSettings> {
 		return this.#settings;
 	}
@@ -142,6 +152,8 @@ class Runtime extends EventEmitter<RuntimeEvents> {
 		bridge.on("change", () => this.emit("change"));
 		bridge.on("log", (message) => streamDeck.logger.info(message));
 		bridge.on("notify", ({ title, body }) => this.emit("notify", { title, body }));
+		bridge.on("limits", (limits) => this.planTrend.record(limits));
+		await this.planTrend.load();
 
 		this.#bridge = bridge;
 		await bridge.start();
@@ -162,6 +174,35 @@ class Runtime extends EventEmitter<RuntimeEvents> {
 		// Property inspectors bind straight to global settings, so mirror their edits.
 		streamDeck.settings.onDidReceiveGlobalSettings<Partial<GlobalSettings>>((ev) => {
 			void this.#adopt(ev.settings);
+		});
+	}
+
+	/**
+	 * Brings the token history up to date, at most once a minute.
+	 *
+	 * The transcripts live wherever Claude Code runs; every session the deck
+	 * has seen says where, so their `projects` folders are the ones read.
+	 */
+	public refreshHistory(): void {
+		if (!this.#bridge) {
+			return;
+		}
+
+		const roots = new Set<string>([join(claudeHome(), "projects")]);
+		for (const session of this.store.list()) {
+			if (session.transcriptPath) {
+				// <projects>/<project>/<session>.jsonl
+				const root = localizePath(posix.dirname(posix.dirname(session.transcriptPath.replace(/\\/g, "/"))), session.wslDistro);
+				if (root) {
+					roots.add(root);
+				}
+			}
+		}
+
+		void this.history.refresh([...roots]).then((changed) => {
+			if (changed) {
+				this.emit("change");
+			}
 		});
 	}
 

@@ -72,5 +72,7 @@ describe("formatting", () => {
 		assert.equal(compactNumber(940), "940");
 		assert.equal(compactNumber(12_400), "12k");
 		assert.equal(compactNumber(1_240_000), "1.2M");
+		assert.equal(compactNumber(115_040_000), "115M");
+		assert.equal(compactNumber(1_420_000_000), "1.4B");
 	});
 });

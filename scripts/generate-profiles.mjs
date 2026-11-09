@@ -111,6 +111,8 @@ const TOKENS = key(A.usage, "Tokens", { metric: "tokens" });
 const TOOLS = key(A.usage, "Tool calls", { metric: "tools" });
 const PLAN_5H = key(A.usage, "5h limit", { metric: "plan5h" });
 const PLAN_WEEK = key(A.usage, "Week limit", { metric: "planWeek" });
+const TODAY = key(A.usage, "Today", { metric: "today" });
+const WEEK = key(A.usage, "7 days", { metric: "week" });
 
 const PROMOTE = key(A.queueControl, "Promote", { mode: "browse" });
 const DROP = key(A.queueControl, "Drop next", { mode: "drop-next" });
@@ -216,7 +218,7 @@ const DEVICES = [
 				Type: "Keypad",
 				Actions: grid([
 					[SLOT(1), SLOT(2), SLOT(3), SLOT(4), TIMER, CONTEXT, PLAN_5H, PLAN_WEEK],
-					[ALLOW, ALWAYS, DENY, HALT, AUTO_SAFE, MODEL, TOKENS, CONTEXT_GRID],
+					[ALLOW, ALWAYS, DENY, HALT, AUTO_SAFE, MODEL, WEEK, CONTEXT_GRID],
 					[Q_TESTS, Q_REVIEW, Q_COMMIT, Q_DOCS, Q_CLIP, PROMOTE, DROP, CLEAR],
 					[LAUNCH("Project 1"), LAUNCH("Project 2"), RUN_REVIEW, RUN_TODAY, COMPACT, CONTINUE, AUTO_ALL, SETUP],
 				]),
@@ -237,7 +239,7 @@ const DEVICES = [
 			},
 			{
 				Type: "Encoder",
-				Actions: grid([[PROMOTE, SESSION, TIMER, CONTEXT]]),
+				Actions: grid([[PROMOTE, SESSION, CONTEXT, PLAN_5H]]),
 			},
 		],
 	},
@@ -253,12 +255,12 @@ const DEVICES = [
 					[SLOT(1), SLOT(2), SLOT(3), SLOT(4), TIMER, CONTEXT, PLAN_5H, PLAN_WEEK, TOKENS],
 					[ALLOW, ALWAYS, DENY, HALT, AUTO_SAFE, AUTO_ALL, MODEL, CONTEXT_GRID, TOOLS],
 					[Q_TESTS, Q_REVIEW, Q_COMMIT, Q_DOCS, Q_CLIP, PROMOTE, DROP, CLEAR, CONTINUE],
-					[LAUNCH("Project 1"), LAUNCH("Project 2"), LAUNCH("Project 3"), RUN_REVIEW, RUN_TODAY, COMPACT, null, null, SETUP],
+					[LAUNCH("Project 1"), LAUNCH("Project 2"), LAUNCH("Project 3"), RUN_REVIEW, RUN_TODAY, COMPACT, TODAY, WEEK, SETUP],
 				]),
 			},
 			{
 				Type: "Encoder",
-				Actions: grid([[PROMOTE, SESSION, TIMER, CONTEXT, PLAN_5H, PLAN_WEEK]]),
+				Actions: grid([[PROMOTE, SESSION, CONTEXT, PLAN_5H, PLAN_WEEK, WEEK]]),
 			},
 		],
 	},
@@ -294,7 +296,7 @@ const DEVICES = [
 				Type: "Keypad",
 				Actions: grid([
 					[SLOT(1), SLOT(2), SLOT(3), SLOT(4), TIMER, CONTEXT, PLAN_5H, PLAN_WEEK, ALLOW, ALWAYS, DENY, HALT, AUTO_SAFE, MODEL, CONTEXT_GRID, SETUP],
-					[Q_TESTS, Q_REVIEW, Q_COMMIT, Q_DOCS, Q_CLIP, PROMOTE, DROP, CLEAR, LAUNCH("Project 1"), LAUNCH("Project 2"), RUN_REVIEW, RUN_TODAY, COMPACT, CONTINUE, AUTO_ALL, TOKENS],
+					[Q_TESTS, Q_REVIEW, Q_COMMIT, Q_DOCS, Q_CLIP, PROMOTE, DROP, CLEAR, LAUNCH("Project 1"), LAUNCH("Project 2"), RUN_REVIEW, RUN_TODAY, COMPACT, CONTINUE, AUTO_ALL, WEEK],
 				]),
 			},
 			{
@@ -326,6 +328,43 @@ const DEVICES = [
 				Actions: grid([
 					[STATUS, ALLOW, DENY, HALT],
 					[Q_TESTS, COMPACT, AUTO_SAFE, SETUP],
+				]),
+			},
+		],
+	},
+	{
+		// Stream Deck Mobile picks its grid on the phone; 5 x 3 is the layout it
+		// starts with. Model as Stream Deck itself names the Wi-Fi client.
+		name: "Claude Deck Mobile",
+		deviceType: 3,
+		model: "VSD/WiFi",
+		controllers: [
+			{
+				Type: "Keypad",
+				Actions: grid([
+					[SLOT(1), SLOT(2), CONTEXT, PLAN_5H, WEEK],
+					[ALLOW, DENY, HALT, AUTO_SAFE, MODEL],
+					[Q_TESTS, CLEAR, COMPACT, CONTINUE, SETUP],
+				]),
+			},
+		],
+	},
+	{
+		// The on-screen Virtual Stream Deck scales from 1 to 8 x 8 keys. This
+		// fills the 4 x 4 corner, so it reads whole at any size from there up.
+		// Model as Elgato's own on-screen profiles carry it (StreamDeck.exe
+		// calls this device ESDUiStreamDeck).
+		name: "Claude Deck Virtual",
+		deviceType: 11,
+		model: "UI Stream Deck",
+		controllers: [
+			{
+				Type: "Keypad",
+				Actions: grid([
+					[STATUS, CONTEXT, PLAN_5H, WEEK],
+					[ALLOW, ALWAYS, DENY, HALT],
+					[Q_TESTS, CLEAR, COMPACT, AUTO_SAFE],
+					[LAUNCH("Project"), CONTINUE, MODEL, SETUP],
 				]),
 			},
 		],

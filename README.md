@@ -46,7 +46,7 @@ is configured with `onFailure: "continue"` — Claude Code behaves exactly as if
 | **Run Task** | A one-shot `claude -p` run in the background. Never touches your open session. |
 | **Session Slot** | Gives one session a key of its own, held for that session's whole life. A row of them is a board of everything running. |
 | **Launch Claude** | Opens a terminal with an interactive session in a folder you choose. |
-| **Usage & Timer** | Turn timer, tool calls, token counts, context pressure, and **plan limits** (5-hour and weekly, with a reset countdown) for claude.ai subscriptions. |
+| **Usage & Timer** | Turn timer, tool calls, token counts, context pressure, and **plan limits** (5-hour and weekly, with a reset countdown, and a warning when the current pace runs out before the reset) for claude.ai subscriptions. **History** charts tokens by hour for today and by day for the week, read straight from Claude Code's transcripts, so they are full from the first minute. On a dial, plan limits draw how they moved. |
 | **Autopilot** | Approves tool calls for a set stretch of time, then switches itself back off. |
 | **Stop Claude** | Emergency brake: blocks every further tool call so Claude winds down and reports back. |
 | **Model** | Shows the session's model and switches it at the next turn boundary. |
@@ -79,8 +79,9 @@ unchanged. Unticking **Plan limits**, or removing the hooks, puts your own statu
 
 Every Stream Deck with keys gets a layout built for its grid rather than cropped from a bigger one —
 Stream Deck, Mini, XL, +, + XL and Galleon 100 SD (dials wired to the queue, session and usage), Neo,
-Studio, and the Pedal (allow · stop · deny under your feet). Stream Deck Mobile and the Virtual Stream
-Deck have no fixed grid, so they get no ready-made layout. **Hold the Connect key** for about
+Studio, and the Pedal (allow · stop · deny under your feet). Stream Deck Mobile gets a layout for the
+5 × 3 grid it starts with, and the Virtual Stream Deck one for its top-left 4 × 4, which stays whole at
+any larger size. **Hold the Connect key** for about
 a second to switch to the one for your deck. If Stream Deck has not installed it yet (it does not for a
 developer link), the same hold hands the profile file to Stream Deck, which offers to import it.
 
@@ -88,7 +89,7 @@ Rows are tasks, not categories, because that is how a deck is actually used. On 
 
 ```
 Watch     session 1   session 2   session 3   session 4   timer    context  5h limit  week limit
-Answer    allow       always      deny        stop        autopilot model   session   status
+Answer    allow       always      deny        stop        autopilot model   7 days    /context
 Queue     run tests   review      commit      docs        paste    promote  drop      clear
 Start     project 1   project 2   review diff today       /compact continue autopilot connect
                                                                             (all)

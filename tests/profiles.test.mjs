@@ -26,10 +26,11 @@ function unzip(buffer) {
 const manifest = JSON.parse(await readFile(new URL("manifest.json", DIR), "utf8"));
 
 /** Grid of each device type, from the Stream Deck SDK's own descriptions. */
-const GRIDS = { 0: [5, 3], 1: [3, 2], 2: [8, 4], 5: [3, 1], 7: [4, 2], 9: [4, 2], 10: [16, 2], 12: [3, 4], 13: [9, 4] };
+// Mobile is checked against the 5 x 3 grid it starts with, Virtual against its 8 x 8 maximum.
+const GRIDS = { 0: [5, 3], 1: [3, 2], 2: [8, 4], 3: [5, 3], 5: [3, 1], 7: [4, 2], 9: [4, 2], 10: [16, 2], 11: [8, 8], 12: [3, 4], 13: [9, 4] };
 
 describe("bundled profiles", () => {
-	it("covers every Stream Deck with keys", () => {
+	it("covers every Stream Deck with screens or pedals", () => {
 		assert.deepEqual(
 			manifest.Profiles.map((p) => p.DeviceType).sort((a, b) => a - b),
 			Object.keys(GRIDS).map(Number),

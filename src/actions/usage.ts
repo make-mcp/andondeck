@@ -5,22 +5,57 @@ import {
 	type DialRotateEvent,
 	type KeyDownEvent,
 	type TouchTapEvent,
+	type WillDisappearEvent,
 } from "@elgato/streamdeck";
 import type { JsonObject } from "@elgato/utils";
 
 import { DeckAction, type AnyAction, type SessionScoped } from "./base.js";
-import type { TileTone } from "../ui/render.js";
+import type { ChartData, TileTone } from "../ui/render.js";
 import { runtime } from "../runtime.js";
-import { compactNumber, duration, tile } from "../ui/render.js";
+import { projectFull } from "../claude/history.js";
+import { compactNumber, duration, strip, tile } from "../ui/render.js";
 import type { SessionState } from "../bridge/types.js";
 
-type Metric = "turn" | "context" | "tokens" | "tools" | "busy" | "plan5h" | "planWeek";
+type Metric = "turn" | "context" | "tokens" | "tools" | "busy" | "plan5h" | "planWeek" | "today" | "week";
 
 type UsageSettings = SessionScoped & {
 	metric?: Metric;
 } & JsonObject;
 
-const ORDER: Metric[] = ["turn", "context", "plan5h", "planWeek", "tokens", "tools", "busy"];
+const ORDER: Metric[] = ["turn", "context", "plan5h", "planWeek", "today", "week", "tokens", "tools", "busy"];
+
+type View = {
+	title: string;
+	value: string;
+	subtitle: string;
+	tone: TileTone;
+	progress: number | undefined;
+	chart?: ChartData;
+};
+
+/** Points across a plan window's chart. */
+const TREND_POINTS = 24;
+
+/**
+ * Resamples irregular readings onto even steps from the window's start to now.
+ *
+ * Each step holds the last reading before it; steps before the first reading
+ * take that first reading, because the plugin simply was not listening then.
+ */
+export function resample(points: { at: number; used: number }[], start: number, now: number, count = TREND_POINTS): number[] {
+	if (points.length === 0) {
+		return [];
+	}
+	const step = (now - start) / Math.max(1, count - 1);
+	let cursor = 0;
+	return Array.from({ length: count }, (_, index) => {
+		const at = start + index * step;
+		while (cursor + 1 < points.length && points[cursor + 1].at <= at) {
+			cursor += 1;
+		}
+		return points[cursor].used;
+	});
+}
 
 /**
  * Context window sizes the deck draws the pressure bar against.
@@ -55,13 +90,7 @@ export function resetIn(ms: number): string {
  * Claude Code only reports these to its status line, and only for claude.ai
  * subscribers; the key says which of those is missing rather than showing 0%.
  */
-function planView(metric: "plan5h" | "planWeek"): {
-	title: string;
-	value: string;
-	subtitle: string;
-	tone: TileTone;
-	progress: number | undefined;
-} {
+function planView(metric: "plan5h" | "planWeek"): View {
 	const title = metric === "plan5h" ? "5h limit" : "Week limit";
 	const limits = runtime.bridge.planLimits;
 	const window = metric === "plan5h" ? limits?.fiveHour : limits?.sevenDay;
@@ -76,18 +105,67 @@ function planView(metric: "plan5h" | "planWeek"): {
 		};
 	}
 
+	const now = Date.now();
 	const used = Math.max(0, Math.min(100, window.usedPercent));
+	const points = runtime.planTrend.within(metric === "plan5h" ? "five" : "week", window.resetsAt);
+	const span = metric === "plan5h" ? 5 * 3_600_000 : 7 * 24 * 3_600_000;
+
+	// At the recent pace, does this run out before it resets? That is the
+	// question the number alone cannot answer.
+	const fullAt = projectFull(points, now);
+	const runsOut = fullAt !== undefined && fullAt < window.resetsAt && used < 100;
+
 	return {
 		title,
 		value: `${Math.round(used)}%`,
-		subtitle: `resets ${resetIn(window.resetsAt - Date.now())}`,
-		tone: used >= 90 ? "error" : used >= 70 ? "waiting" : "working",
+		subtitle: runsOut ? `full in ${resetIn(fullAt - now)}` : `resets ${resetIn(window.resetsAt - now)}`,
+		tone: used >= 90 ? "error" : used >= 70 || runsOut ? "waiting" : "working",
 		progress: used / 100,
+		chart: points.length >= 2 ? { kind: "line", max: 100, series: resample(points, window.resetsAt - span, now) } : undefined,
+	};
+}
+
+/** Token history: today by hour, or the week by day. */
+function historyView(metric: "today" | "week"): View {
+	runtime.refreshHistory();
+	const history = runtime.history;
+	const title = metric === "today" ? "Today" : "7 days";
+
+	if (history.empty) {
+		return { title, value: "—", subtitle: "No transcripts yet", tone: "offline", progress: undefined };
+	}
+
+	const days = history.daily(7);
+	const today = days[days.length - 1];
+	if (metric === "today") {
+		return {
+			title,
+			value: compactNumber(today),
+			subtitle: "tokens · last 12 h",
+			tone: "accent",
+			progress: undefined,
+			chart: { kind: "bars", series: history.hourly(12) },
+		};
+	}
+
+	return {
+		title,
+		value: compactNumber(days.reduce((sum, day) => sum + day, 0)),
+		subtitle: `today ${compactNumber(today)}`,
+		tone: "accent",
+		progress: undefined,
+		chart: { kind: "bars", series: days },
 	};
 }
 
 /** Metric currently shown, per action context, when the dial steps through them. */
 const cursors = new Map<string, number>();
+
+/** Touch-strip layout each dial currently has, so it is only switched when it changes. */
+const layouts = new Map<string, string>();
+
+const STOCK_LAYOUT = "$B1";
+const CHART_LAYOUT = "layouts/chart.json";
 
 /**
  * Turn timer, token counters and context pressure.
@@ -103,6 +181,19 @@ export class UsageAction extends DeckAction<UsageSettings> {
 		const view = this.#view(session, metric);
 
 		if (unit.isDial()) {
+			const layout = view.chart ? CHART_LAYOUT : STOCK_LAYOUT;
+			if (layouts.get(unit.id) !== layout) {
+				layouts.set(unit.id, layout);
+				await unit.setFeedbackLayout(layout);
+			}
+
+			if (view.chart) {
+				await unit.setFeedback({
+					canvas: strip({ title: view.title, value: view.value, subtitle: view.subtitle, tone: view.tone, chart: view.chart }),
+				});
+				return;
+			}
+
 			await unit.setFeedback({
 				title: view.title,
 				value: view.value,
@@ -115,6 +206,9 @@ export class UsageAction extends DeckAction<UsageSettings> {
 			return;
 		}
 
+		// On a key, a plan limit keeps its projection line: "full in 1h 20m" is
+		// worth more than the curve behind it. Dials have room for both.
+		const chart = metric === "plan5h" || metric === "planWeek" ? undefined : view.chart;
 		await unit.setImage(
 			tile({
 				family: "meter",
@@ -122,7 +216,9 @@ export class UsageAction extends DeckAction<UsageSettings> {
 				eyebrow: view.title,
 				headline: view.value,
 				subtitle: view.subtitle,
-				progress: view.progress,
+				// A chart already shows the level; a bar under it would say it twice.
+				progress: chart ? undefined : view.progress,
+				chart,
 			}),
 		);
 	}
@@ -137,16 +233,13 @@ export class UsageAction extends DeckAction<UsageSettings> {
 	}
 
 	/** Turns a metric into something that fits on a key or a dial readout. */
-	#view(session: SessionState | undefined, metric: Metric): {
-		title: string;
-		value: string;
-		subtitle: string;
-		tone: TileTone;
-		progress: number | undefined;
-	} {
-		// Plan limits belong to the account, not a session, so they show without one.
+	#view(session: SessionState | undefined, metric: Metric): View {
+		// Plan limits and history belong to the account, not a session, so they show without one.
 		if (metric === "plan5h" || metric === "planWeek") {
 			return planView(metric);
+		}
+		if (metric === "today" || metric === "week") {
+			return historyView(metric);
 		}
 
 		if (!session) {
@@ -216,6 +309,11 @@ export class UsageAction extends DeckAction<UsageSettings> {
 				};
 			}
 		}
+	}
+
+	protected override onDisappear(ev: WillDisappearEvent<UsageSettings>): void {
+		// A dial that comes back starts on the manifest's layout again.
+		layouts.delete(ev.action.id);
 	}
 
 	override async onKeyDown(ev: KeyDownEvent<UsageSettings>): Promise<void> {
