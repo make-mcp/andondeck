@@ -73,7 +73,9 @@ const CLAWD = "#D77757";
  * Clawd, Claude Code's mascot, in its neutral pose.
  *
  * Taken from the pixel map Claude Code ships (`C` body, `E` eye), squared up
- * so both arms rest at the sides. 17 × 7 cells.
+ * so both arms rest at the sides. Every band in that map is two cells tall —
+ * eyes, arms, lower body and legs alike; halving any of them squashes Clawd
+ * into a flat bar. 17 × 10 cells.
  */
 const CLAWD_BODY = [
 	"..CCCCCCCCCCCCC..",
@@ -81,10 +83,12 @@ const CLAWD_BODY = [
 	"..CCCECCCCCECCC..",
 	"..CCCECCCCCECCC..",
 	"CCCCCCCCCCCCCCCCC",
+	"CCCCCCCCCCCCCCCCC",
+	"..CCCCCCCCCCCCC..",
 	"..CCCCCCCCCCCCC..",
 ];
 
-/** Leg rows: still, and the two steps of a walk. */
+/** Leg row, drawn twice: still, and the two steps of a walk. */
 const CLAWD_LEGS = {
 	still: "..C.C.......C.C..",
 	stepA: "..C..C.....C..C..",
@@ -111,12 +115,13 @@ export function clawd(mood: Mood, phase: number, cx: number, top: number, cell: 
 
 	const rows = CLAWD_BODY.map((row, index) => {
 		// Waiting: the right arm goes up, like a hand raised for attention.
-		if (mood === "waiting" && index === 4) {
+		if (mood === "waiting" && (index === 4 || index === 5)) {
 			return "CCCCCCCCCCCCCCC..";
 		}
 		return row;
 	});
-	rows.push(walking ? (step ? CLAWD_LEGS.stepA : CLAWD_LEGS.stepB) : CLAWD_LEGS.still);
+	const legs = walking ? (step ? CLAWD_LEGS.stepA : CLAWD_LEGS.stepB) : CLAWD_LEGS.still;
+	rows.push(legs, legs);
 
 	const rects: string[] = [];
 	const add = (x: number, y: number, w: number, h: number, fill: string) =>
@@ -141,7 +146,7 @@ export function clawd(mood: Mood, phase: number, cx: number, top: number, cell: 
 
 	if (mood === "waiting") {
 		// The raised arm, straight up from the shoulder.
-		add(15, 3, 2, 1, body);
+		add(15, 3, 2, 2, body);
 		add(16, 0, 1, 3, body);
 	}
 
@@ -467,7 +472,7 @@ export function tile(options: TileOptions): string {
 		}
 		${solid ? "" : edge(options.edge ?? "quiet", hue && (options.edge ?? "quiet") === "quiet" ? hue : tone, phase)}
 		${top}
-		${mascot ? clawd(mascot, phase, 36, 47, 2.6) : ""}
+		${mascot ? clawd(mascot, phase, 36, 46, 2.2) : ""}
 		${middle}
 		${bottom}
 		${bar}

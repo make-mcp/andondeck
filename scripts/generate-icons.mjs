@@ -46,7 +46,10 @@ const CLAWD_ROWS = [
 	"..CCCECCCCCECCC..",
 	"..CCCECCCCCECCC..",
 	"CCCCCCCCCCCCCCCCC",
+	"CCCCCCCCCCCCCCCCC",
 	"..CCCCCCCCCCCCC..",
+	"..CCCCCCCCCCCCC..",
+	"..C.C.......C.C..",
 	"..C.C.......C.C..",
 ];
 
@@ -66,7 +69,7 @@ function clawd(x0, y0, cell, body = "#D77757", eye = "#14110F") {
 function marketplaceIcon() {
 	return `<svg xmlns="http://www.w3.org/2000/svg" width="288" height="288" viewBox="0 0 288 288">
 		<rect width="288" height="288" rx="64" fill="${BACKDROP}"/>
-		${clawd(144 - 17 * 6, 70, 12)}
+		${clawd(144 - 17 * 6, 56, 12)}
 		<text x="144" y="228" font-family="${FONT}" font-size="34" font-weight="700" fill="${INK}" text-anchor="middle">Claude Deck</text>
 	</svg>`;
 }
@@ -74,7 +77,7 @@ function marketplaceIcon() {
 /** Category icon in the action list: Clawd in white, as Stream Deck expects. */
 function categoryIcon() {
 	return `<svg xmlns="http://www.w3.org/2000/svg" width="34" height="28" viewBox="0 0 34 28">
-		${clawd(0, 7, 2, INK, "rgba(0,0,0,0)")}
+		${clawd(0, 4, 2, INK, "rgba(0,0,0,0)")}
 	</svg>`;
 }
 
