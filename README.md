@@ -9,8 +9,8 @@ See what Claude is doing, queue the next prompt without interrupting the current
 requests with one key, switch between projects, fire off background tasks, and keep an eye on context
 pressure — all from the deck.
 
-> **Status:** 0.1.0. Verified against Claude Code 2.1.319 and Stream Deck 7.4. Not yet on Elgato
-> Marketplace; build it yourself with the steps below.
+> **Status:** 1.0.0. Verified against Claude Code 2.1.319 and Stream Deck 7.4. Download it from
+> [Releases](https://github.com/make-mcp/andondeck/releases/latest) or build it yourself with the steps below.
 
 ## How it works
 
@@ -130,13 +130,21 @@ where you were, and so does answering in the terminal. A turn simply ending does
 
 ## Install
 
+### From a release
+
+Requires Stream Deck 7.1+.
+
+Download `com.andondeck.plugin.streamDeckPlugin` from the
+[latest release](https://github.com/make-mcp/andondeck/releases/latest) and double-click it. Then connect it
+as described below.
+
 ### From source
 
 Requires Node.js 20.5+ (24+ recommended) and Stream Deck 7.1+.
 
 ```bash
 git clone https://github.com/make-mcp/andondeck.git
-cd claude-deck
+cd andondeck
 npm install
 npm run build
 npm run link
