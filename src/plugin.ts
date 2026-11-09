@@ -102,12 +102,10 @@ streamDeck.ui.onSendToPlugin(async (ev) => {
 // Surface bridge notifications in the plugin log; the keys themselves repaint.
 runtime.on("notify", ({ title, body }) => streamDeck.logger.info(`${title}: ${body}`));
 
-// One line per press, so a key that "does nothing" can be told apart from a
-// key whose press never arrived.
-const short = (uuid: string) => uuid.replace("io.github.claude-deck.plugin.", "");
-streamDeck.actions.onKeyDown((ev) => streamDeck.logger.info(`press ${short(ev.action.manifestId)} ${JSON.stringify(ev.payload.settings)}`));
-streamDeck.actions.onDialDown((ev) => streamDeck.logger.info(`dial press ${short(ev.action.manifestId)}`));
-streamDeck.actions.onDialRotate((ev) => streamDeck.logger.info(`dial turn ${short(ev.action.manifestId)} ${ev.payload.ticks}`));
+// Key presses are logged above; dials get the same, so a dial that "does
+// nothing" can be told apart from one whose turn never arrived.
+streamDeck.actions.onDialDown((ev) => streamDeck.logger.info(`dialDown ${ev.action.manifestId}`));
+streamDeck.actions.onDialRotate((ev) => streamDeck.logger.info(`dialRotate ${ev.action.manifestId} ticks=${ev.payload.ticks}`));
 
 await streamDeck.connect();
 await runtime.start();
