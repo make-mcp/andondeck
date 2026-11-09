@@ -1,6 +1,8 @@
-# Andon Deck for Claude Code
+# <img src="site/marketplace/icon.png" alt="" height="36"> Andon Deck for Claude Code
 
 Control [Claude Code](https://claude.com/claude-code) from your Elgato Stream Deck. Free, open source, MIT.
+
+![Andon Deck on a Stream Deck XL: session status, permission answers, the prompt queue and plan limits](site/marketplace/thumbnail.png)
 
 An *andon* is the signal light over a machine on a factory floor: green while it runs, amber when someone is
 needed, red when it stopped — readable from across the hall. Every key here works the same way.
@@ -78,7 +80,11 @@ Plan limits are only reported to Claude Code's status line, so Andon Deck places
 forwards the snapshot to the deck in the background and then runs the status line you already had,
 unchanged. Unticking **Plan limits**, or removing the hooks, puts your own status line back.
 
+![Plan limit and usage keys, and the same on Stream Deck + dials](site/marketplace/gallery-4-limits.png)
+
 ## Ready-made profiles
+
+![Ready-made layouts for Stream Deck Mini, Neo and Stream Deck](site/marketplace/gallery-5-layouts.png)
 
 Every Stream Deck with keys gets a layout built for its grid rather than cropped from a bigger one —
 Stream Deck, Mini, XL, +, + XL and Galleon 100 SD (dials wired to the queue, session and usage), Neo,
@@ -89,6 +95,8 @@ a second to switch to the one for your deck. If Stream Deck has not installed it
 developer link), the same hold hands the profile file to Stream Deck, which offers to import it.
 
 Rows are tasks, not categories, because that is how a deck is actually used. On the XL:
+
+![The Stream Deck XL layout](site/marketplace/gallery-1-deck.png)
 
 ```
 Watch     session 1   session 2   session 3   session 4   context  5h limit week limit 7 days
@@ -106,6 +114,8 @@ State lives on the key's border, information lives in the middle. A Stream Deck 
 from the corner of your eye, so the state has to carry at a distance and the text is for when you actually
 look:
 
+![Key borders for working, waiting, failed, compacting and idle](site/marketplace/gallery-3-border.png)
+
 | Border | Means |
 | --- | --- |
 | A light running the edge, green | Claude is working |
@@ -122,6 +132,8 @@ a hand raised while it waits on you, asleep when idle. Action keys carry a faint
 posed for what they do: cheering on Allow, arms hanging on Deny, a hand up on Stop, walking on queue and
 launch keys, asleep on Autopilot. Meters stay plain so their numbers have the whole key. Untick **Mascot**
 under **Connect Claude Code** for plain keys everywhere.
+
+![The full-screen alert across every key](site/marketplace/gallery-2-alert.png)
 
 When Claude asks for permission or has a question, every connected deck switches for a moment to a
 full-screen Clawd waving across all its keys — whatever profile it was showing. Any key takes you back to
