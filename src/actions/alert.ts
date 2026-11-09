@@ -7,6 +7,8 @@ import streamDeck, {
 	type WillDisappearEvent,
 } from "@elgato/streamdeck";
 
+import type { JsonObject } from "@elgato/utils";
+
 import { runtime } from "../runtime.js";
 import { alertKey, alertScene } from "../ui/render.js";
 
@@ -71,7 +73,7 @@ export class AlertAction extends SingletonAction {
 			if (!unit.isKey()) {
 				continue;
 			}
-			const key = unit as KeyAction;
+			const key = unit as KeyAction<JsonObject>;
 			const at = key.coordinates;
 			if (!at) {
 				continue;
