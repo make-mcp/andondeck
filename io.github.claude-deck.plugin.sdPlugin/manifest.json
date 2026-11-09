@@ -376,6 +376,34 @@
 			"AutoInstall": true
 		},
 		{
+			"Name": "Claude Deck Plus XL",
+			"DeviceType": 13,
+			"Readonly": false,
+			"DontAutoSwitchWhenInstalled": true,
+			"AutoInstall": true
+		},
+		{
+			"Name": "Claude Deck Galleon",
+			"DeviceType": 12,
+			"Readonly": false,
+			"DontAutoSwitchWhenInstalled": true,
+			"AutoInstall": true
+		},
+		{
+			"Name": "Claude Deck Studio",
+			"DeviceType": 10,
+			"Readonly": false,
+			"DontAutoSwitchWhenInstalled": true,
+			"AutoInstall": true
+		},
+		{
+			"Name": "Claude Deck Pedal",
+			"DeviceType": 5,
+			"Readonly": false,
+			"DontAutoSwitchWhenInstalled": true,
+			"AutoInstall": true
+		},
+		{
 			"Name": "Claude Deck Neo",
 			"DeviceType": 9,
 			"Readonly": false,

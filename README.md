@@ -77,8 +77,10 @@ unchanged. Unticking **Plan limits**, or removing the hooks, puts your own statu
 
 ## Ready-made profiles
 
-Every supported device gets a layout built for its grid rather than cropped from a bigger one — Stream
-Deck, Mini, XL, + (dials wired to the queue, session and usage) and Neo. **Hold the Connect key** for about
+Every Stream Deck with keys gets a layout built for its grid rather than cropped from a bigger one —
+Stream Deck, Mini, XL, +, + XL and Galleon 100 SD (dials wired to the queue, session and usage), Neo,
+Studio, and the Pedal (allow · stop · deny under your feet). Stream Deck Mobile and the Virtual Stream
+Deck have no fixed grid, so they get no ready-made layout. **Hold the Connect key** for about
 a second to switch to the one for your deck. If Stream Deck has not installed it yet (it does not for a
 developer link), the same hold hands the profile file to Stream Deck, which offers to import it.
 

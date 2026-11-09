@@ -42,8 +42,12 @@ const PROFILE_FOR_DEVICE: Record<number, string> = {
 	0: "Claude Deck",
 	1: "Claude Deck Mini",
 	2: "Claude Deck XL",
+	5: "Claude Deck Pedal",
 	7: "Claude Deck Plus",
 	9: "Claude Deck Neo",
+	10: "Claude Deck Studio",
+	12: "Claude Deck Galleon",
+	13: "Claude Deck Plus XL",
 };
 
 /** Hold the key at least this long to ask for the bundled layout. */

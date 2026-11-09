@@ -242,6 +242,81 @@ const DEVICES = [
 		],
 	},
 	{
+		// Model and grid copied from Elgato's own Volume Controller "+ XL" profile.
+		name: "Claude Deck Plus XL",
+		deviceType: 13,
+		model: "20GBX9901",
+		controllers: [
+			{
+				Type: "Keypad",
+				Actions: grid([
+					[SLOT(1), SLOT(2), SLOT(3), SLOT(4), TIMER, CONTEXT, PLAN_5H, PLAN_WEEK, TOKENS],
+					[ALLOW, ALWAYS, DENY, HALT, AUTO_SAFE, AUTO_ALL, MODEL, CONTEXT_GRID, TOOLS],
+					[Q_TESTS, Q_REVIEW, Q_COMMIT, Q_DOCS, Q_CLIP, PROMOTE, DROP, CLEAR, CONTINUE],
+					[LAUNCH("Project 1"), LAUNCH("Project 2"), LAUNCH("Project 3"), RUN_REVIEW, RUN_TODAY, COMPACT, null, null, SETUP],
+				]),
+			},
+			{
+				Type: "Encoder",
+				Actions: grid([[PROMOTE, SESSION, TIMER, CONTEXT, PLAN_5H, PLAN_WEEK]]),
+			},
+		],
+	},
+	{
+		// Model, grid and dial positions copied from Elgato's own Volume Controller "Galleon" profile.
+		name: "Claude Deck Galleon",
+		deviceType: 12,
+		model: "GRETSCH",
+		controllers: [
+			{
+				Type: "Keypad",
+				Actions: grid([
+					[STATUS, CONTEXT, PLAN_5H],
+					[ALLOW, DENY, HALT],
+					[Q_TESTS, COMPACT, AUTO_SAFE],
+					[LAUNCH("Project"), CLEAR, SETUP],
+				]),
+			},
+			{
+				Type: "Encoder",
+				Actions: grid([[PROMOTE, SESSION]]),
+			},
+		],
+	},
+	{
+		// Grid from the SDK's description (16 x 2 keys, a dial each side). No
+		// Elgato profile for the Studio was available to copy the model from.
+		name: "Claude Deck Studio",
+		deviceType: 10,
+		model: "20GBO9901",
+		controllers: [
+			{
+				Type: "Keypad",
+				Actions: grid([
+					[SLOT(1), SLOT(2), SLOT(3), SLOT(4), TIMER, CONTEXT, PLAN_5H, PLAN_WEEK, ALLOW, ALWAYS, DENY, HALT, AUTO_SAFE, MODEL, CONTEXT_GRID, SETUP],
+					[Q_TESTS, Q_REVIEW, Q_COMMIT, Q_DOCS, Q_CLIP, PROMOTE, DROP, CLEAR, LAUNCH("Project 1"), LAUNCH("Project 2"), RUN_REVIEW, RUN_TODAY, COMPACT, CONTINUE, AUTO_ALL, TOKENS],
+				]),
+			},
+			{
+				Type: "Encoder",
+				Actions: grid([[PROMOTE, SESSION]]),
+			},
+		],
+	},
+	{
+		// Three pedals, no screens: the three things worth doing with your feet.
+		// Model per Stream Deck's hardware table; no Elgato pedal profile to copy.
+		name: "Claude Deck Pedal",
+		deviceType: 5,
+		model: "20GBF9901",
+		controllers: [
+			{
+				Type: "Keypad",
+				Actions: grid([[ALLOW, HALT, DENY]]),
+			},
+		],
+	},
+	{
 		name: "Claude Deck Neo",
 		deviceType: 9,
 		model: "20GBJ9901",
