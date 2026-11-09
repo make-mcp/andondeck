@@ -219,6 +219,14 @@ const LANGS = [
 ];
 const SITE = "https://andondeck.com/";
 
+/**
+ * Where every download button points. Fill in the Elgato Marketplace URL once
+ * the listing is live; until then the buttons offer the GitHub release and a
+ * note says the Marketplace listing is coming.
+ */
+const MARKETPLACE_URL = "";
+const DOWNLOAD_URL = MARKETPLACE_URL || "https://github.com/make-mcp/andondeck/releases/latest";
+
 const esc = (s) => String(s).replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 
 /** Fills `{{key}}` (escaped) and `{{{key}}}` (trusted markup from the strings files). */
@@ -332,6 +340,8 @@ async function build() {
 			impressum: `${up}${legalFile("impressum", lang.code)}`,
 			datenschutz: `${up}${legalFile("datenschutz", lang.code)}`,
 			devices: devicesMarkup(t),
+			downloadUrl: DOWNLOAD_URL,
+			marketplaceNote: MARKETPLACE_URL ? "" : `      <span class="hint">${esc(t.marketplace)}</span>`,
 			vCss: hashes["style.css"],
 			vJs: hashes["main.js"],
 			vLang: hashes["lang.js"],
