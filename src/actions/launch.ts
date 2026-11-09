@@ -47,6 +47,7 @@ export class LaunchAction extends DeckAction<LaunchSettings> {
 
 			await key.setImage(
 				tile({
+					family: "launch",
 					tone: session ? "working" : "idle",
 					eyebrow: session ? "Running" : "Starting",
 					headline: caption,
@@ -59,6 +60,7 @@ export class LaunchAction extends DeckAction<LaunchSettings> {
 		launched.delete(key.id);
 		await key.setImage(
 			tile({
+				family: "launch",
 				tone: "accent",
 				eyebrow: settings.resume ? "Resume" : "Launch",
 				headline: caption,

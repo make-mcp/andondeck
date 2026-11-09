@@ -37,6 +37,32 @@ export const PALETTE = {
 
 export type TileTone = keyof typeof PALETTE;
 
+/**
+ * One colour per family of keys, so a full XL reads as groups at a glance
+ * instead of thirty grey squares. Families tint the key; the andon state
+ * colours above still own the status words and moving borders.
+ */
+export const FAMILY = {
+	/** Answering Claude: positive. */
+	allow: "#3FB37A",
+	/** Answering Claude: positive, and permanent. */
+	always: "#2BB3B1",
+	/** Answering Claude: negative. */
+	deny: "#E5534B",
+	/** Stopping or steering Claude. */
+	control: "#F08A3C",
+	/** Prompts lined up for later. */
+	queue: "#4F8FE8",
+	/** Starting something new. */
+	launch: "#A06CE4",
+	/** Numbers to watch. */
+	meter: "#E2B93B",
+	/** Sessions and connection. */
+	session: "#D97757",
+} as const;
+
+export type TileFamily = keyof typeof FAMILY;
+
 /** Perimeter of the 72-unit rounded square the border traces. */
 const PERIMETER = 2 * (72 - 2 * 9) + 2 * Math.PI * 9;
 
@@ -132,6 +158,8 @@ export type TileOptions = {
 	edge?: EdgeMotion;
 	/** 0–1 animation position, advanced by the caller each frame. */
 	phase?: number;
+	/** Tints the key with its family colour; see {@link FAMILY}. */
+	family?: TileFamily;
 };
 
 type TextLine = { text: string; size: number; color: string; weight: number; y: number };
@@ -276,7 +304,8 @@ export function tile(options: TileOptions): string {
 	const hasTop = Boolean(options.eyebrow);
 	const hasBottom = Boolean(options.subtitle);
 
-	const top = hasTop ? text({ text: options.eyebrow!, size: 9, color: dim, weight: 600, y: 14 }) : "";
+	const hue = options.family && !solid ? FAMILY[options.family] : undefined;
+	const top = hasTop ? text({ text: options.eyebrow!, size: 9, color: hue ?? dim, weight: 650, y: 14 }) : "";
 	const bottomY = options.progress === undefined ? 65 : 59;
 	const bottom = hasBottom
 		? (() => {
@@ -338,7 +367,12 @@ export function tile(options: TileOptions): string {
 
 	return toDataUri(`<svg xmlns="http://www.w3.org/2000/svg" width="72" height="72" viewBox="0 0 72 72">
 		<rect width="72" height="72" rx="9" fill="${field}"/>
-		${solid ? "" : edge(options.edge ?? "quiet", tone, phase)}
+		${
+			hue
+				? `<defs><linearGradient id="h" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="${hue}" stop-opacity=".42"/><stop offset=".75" stop-color="${hue}" stop-opacity=".1"/></linearGradient></defs><rect width="72" height="72" rx="9" fill="url(#h)"/>`
+				: ""
+		}
+		${solid ? "" : edge(options.edge ?? "quiet", hue && (options.edge ?? "quiet") === "quiet" ? hue : tone, phase)}
 		${top}
 		${middle}
 		${bottom}

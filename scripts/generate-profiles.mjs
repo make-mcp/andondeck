@@ -136,6 +136,7 @@ const typed = (command, label) => ({
 });
 
 const COMPACT = typed("/compact", "Compact");
+const CONTEXT_GRID = typed("/context", "Context map");
 const CONTINUE = key(A.prompt, "Continue", { preset: "continue" });
 
 // Launchers ship without a folder; the key says so until one is set.
@@ -215,7 +216,7 @@ const DEVICES = [
 				Type: "Keypad",
 				Actions: grid([
 					[SLOT(1), SLOT(2), SLOT(3), SLOT(4), TIMER, CONTEXT, PLAN_5H, PLAN_WEEK],
-					[ALLOW, ALWAYS, DENY, HALT, AUTO_SAFE, MODEL, SESSION, STATUS],
+					[ALLOW, ALWAYS, DENY, HALT, AUTO_SAFE, MODEL, TOKENS, CONTEXT_GRID],
 					[Q_TESTS, Q_REVIEW, Q_COMMIT, Q_DOCS, Q_CLIP, PROMOTE, DROP, CLEAR],
 					[LAUNCH("Project 1"), LAUNCH("Project 2"), RUN_REVIEW, RUN_TODAY, COMPACT, CONTINUE, AUTO_ALL, SETUP],
 				]),

@@ -53,6 +53,7 @@ export class QueuePromptAction extends DeckAction<QueueSettings> {
 
 		await key.setImage(
 			tile({
+				family: "queue",
 				tone: idleHint ? "waiting" : "accent",
 				eyebrow: fromClipboard ? "Queue clipboard" : "Queue",
 				headline: caption,

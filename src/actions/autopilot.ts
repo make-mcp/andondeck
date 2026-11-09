@@ -35,10 +35,13 @@ export class AutopilotAction extends DeckAction<AutopilotSettings> {
 			await key.setState(0);
 			await key.setImage(
 				tile({
+					family: "control",
 					tone: "accent",
+					// Two autopilot keys on one deck must not look alike while both are
+					// off, so the scope is the headline and "off" the caption.
 					eyebrow: "Autopilot",
-					headline: "Off",
-					subtitle: scope === "all" ? "Arms everything" : "Arms read-only",
+					headline: scope === "all" ? "All tools" : "Read-only",
+					subtitle: settings.minutes ? `Off · arms ${settings.minutes} min` : "Off",
 				}),
 			);
 			return;
@@ -50,6 +53,7 @@ export class AutopilotAction extends DeckAction<AutopilotSettings> {
 		await key.setState(1);
 		await key.setImage(
 			tile({
+				family: "control",
 				tone: active.mode === "all" ? "error" : "accent",
 				solid: true,
 				eyebrow: "Autopilot",

@@ -82,6 +82,7 @@ export class ApproveAction extends DeckAction<ApproveSettings> {
 		if (!match) {
 			await key.setImage(
 				tile({
+					family: verdict,
 					tone: "offline",
 					headline: label,
 					subtitle: runtime.settings.deckApprovals ? "Nothing to answer" : "Deck approvals off",
@@ -96,6 +97,7 @@ export class ApproveAction extends DeckAction<ApproveSettings> {
 
 		await key.setImage(
 			tile({
+				family: verdict,
 				tone: isArmed ? "waiting" : verdict === "deny" ? "error" : verdict === "always" ? "accent" : "working",
 				solid: isArmed,
 				edge: "pulse",

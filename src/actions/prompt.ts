@@ -77,6 +77,7 @@ export class PromptAction extends DeckAction<PromptSettings> {
 
 		await key.setImage(
 			tile({
+				family: "queue",
 				tone: text ? "accent" : "offline",
 				eyebrow: glyph,
 				headline: label,

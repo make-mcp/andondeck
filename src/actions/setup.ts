@@ -71,6 +71,7 @@ export class SetupAction extends DeckAction<SetupSettings> {
 		if (!runtime.bridge.listening) {
 			await key.setImage(
 				tile({
+					family: "session",
 					tone: "error",
 					edge: "broken",
 					eyebrow: "Bridge",
@@ -85,6 +86,7 @@ export class SetupAction extends DeckAction<SetupSettings> {
 		const sessions = runtime.store.list().length;
 		await key.setImage(
 			tile({
+				family: "session",
 				tone: connected ? "working" : "accent",
 				eyebrow: "Claude Deck",
 				headline: connected ? "Connected" : "Connect",

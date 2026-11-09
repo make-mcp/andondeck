@@ -117,6 +117,7 @@ export class UsageAction extends DeckAction<UsageSettings> {
 
 		await unit.setImage(
 			tile({
+				family: "meter",
 				tone: view.tone,
 				eyebrow: view.title,
 				headline: view.value,

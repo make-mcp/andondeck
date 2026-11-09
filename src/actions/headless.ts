@@ -60,6 +60,7 @@ export class HeadlessAction extends DeckAction<HeadlessSettings> {
 			await key.setState(1);
 			await key.setImage(
 				tile({
+					family: "launch",
 					tone: "working",
 					edge: "travel",
 					phase: animationPhase(),
@@ -75,6 +76,7 @@ export class HeadlessAction extends DeckAction<HeadlessSettings> {
 			await key.setState(0);
 			await key.setImage(
 				tile({
+					family: "launch",
 					tone: run.done.ok ? "working" : "error",
 					eyebrow: run.done.ok ? `Done in ${duration(run.done.durationMs)}` : "Failed",
 					headline: label,
@@ -88,6 +90,7 @@ export class HeadlessAction extends DeckAction<HeadlessSettings> {
 		await key.setState(0);
 		await key.setImage(
 			tile({
+				family: "launch",
 				tone: "accent",
 				eyebrow: "Task",
 				headline: label,

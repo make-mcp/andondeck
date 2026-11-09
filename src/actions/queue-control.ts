@@ -60,6 +60,7 @@ export class QueueControlAction extends DeckAction<QueueControlSettings> {
 
 		await unit.setImage(
 			tile({
+				family: "queue",
 				tone: queue.length ? "accent" : "offline",
 				eyebrow: "Queue",
 				headline: labels[mode].title,

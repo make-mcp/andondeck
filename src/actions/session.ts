@@ -55,6 +55,7 @@ export class SessionAction extends DeckAction<SessionSettings> {
 
 		await unit.setImage(
 			tile({
+				family: "session",
 				tone: shown ? "accent" : "offline",
 				eyebrow: pinnedId && shown && pinnedId === shown.sessionId ? "Pinned" : "Session",
 				headline: shown?.project ?? "None",

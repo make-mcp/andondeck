@@ -30,6 +30,7 @@ export class HaltAction extends DeckAction<HaltSettings> {
 			await key.setState(1);
 			await key.setImage(
 				tile({
+					family: "control",
 					tone: "error",
 					solid: true,
 					eyebrow: "Stopped",
@@ -43,6 +44,7 @@ export class HaltAction extends DeckAction<HaltSettings> {
 		await key.setState(0);
 		await key.setImage(
 			tile({
+				family: "control",
 				tone: session?.status === "working" ? "error" : "offline",
 				headline: "Stop",
 				headlineTone: session?.status === "working" ? "state" : "ink",
