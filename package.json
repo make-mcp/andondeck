@@ -6,11 +6,11 @@
   "author": "claude-deck contributors",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/make-mcp/claude-deck.git"
+    "url": "git+https://github.com/make-mcp/andondeck.git"
   },
-  "homepage": "https://github.com/make-mcp/claude-deck#readme",
+  "homepage": "https://github.com/make-mcp/andondeck#readme",
   "bugs": {
-    "url": "https://github.com/make-mcp/claude-deck/issues"
+    "url": "https://github.com/make-mcp/andondeck/issues"
   },
   "keywords": [
     "stream-deck",
@@ -27,10 +27,10 @@
   },
   "scripts": {
     "build": "npm run icons && npm run profiles && rollup -c",
-    "watch": "npm run icons && rollup -c -w --watch.onEnd=\"streamdeck restart io.github.claude-deck.plugin\"",
+    "watch": "npm run icons && rollup -c -w --watch.onEnd=\"streamdeck restart com.andondeck.plugin\"",
     "icons": "node scripts/generate-icons.mjs",
     "validate": "streamdeck validate",
-    "pack": "npm run build && streamdeck pack io.github.claude-deck.plugin.sdPlugin --output dist --force",
+    "pack": "npm run build && streamdeck pack com.andondeck.plugin.sdPlugin --output dist --force",
     "link": "node scripts/dev-link.mjs",
     "typecheck": "tsc --noEmit",
     "test": "node --test tests/*.test.mjs",

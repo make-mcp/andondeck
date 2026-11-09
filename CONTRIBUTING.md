@@ -7,7 +7,7 @@ Issues and pull requests are welcome.
 ```bash
 npm install
 npm run build
-npx @elgato/cli link io.github.claude-deck.plugin.sdPlugin
+npx @elgato/cli link com.andondeck.plugin.sdPlugin
 npm run watch
 ```
 

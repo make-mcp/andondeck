@@ -90,7 +90,7 @@
   "p2": "<b>Ваши настройки остаются вашими.</b> Хуки добавляются рядом с вашими и чисто удаляются; существующая строка состояния продолжает работать.",
   "p3": "<b>Читается, но не выгружается.</b> История использования берётся из журналов на вашем диске и остаётся там.",
   "p4": "<b>Открытый код, MIT.</b> Каждая строка на GitHub — читайте, форкайте, улучшайте.",
-  "contrib": "Issues и pull requests приветствуются — <a href=\"https://github.com/make-mcp/claude-deck\">github.com/make-mcp/claude-deck</a>.",
+  "contrib": "Issues и pull requests приветствуются — <a href=\"https://github.com/make-mcp/andondeck\">github.com/make-mcp/andondeck</a>.",
   "footer": "Andon Deck · MIT · открытый код, без отслеживания, без cookies",
   "legalNotice": "Выходные данные",
   "privacy": "Конфиденциальность",

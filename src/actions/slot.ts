@@ -52,7 +52,7 @@ const MOVING: SessionStatus[] = ["working", "waiting", "compacting"];
  * keeps its project for the session's whole life, so you learn where to look
  * rather than reading labels every time.
  */
-@action({ UUID: "io.github.claude-deck.plugin.slot" })
+@action({ UUID: "com.andondeck.plugin.slot" })
 export class SlotAction extends DeckAction<SlotSettings> {
 	protected override animates(_key: AnyAction<SlotSettings>, settings: SlotSettings): boolean {
 		const session = runtime.store.ordered()[Math.max(1, Number(settings.index) || 1) - 1];

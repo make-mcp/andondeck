@@ -135,7 +135,7 @@ where you were, and so does answering in the terminal. A turn simply ending does
 Requires Node.js 20.5+ (24+ recommended) and Stream Deck 6.9+.
 
 ```bash
-git clone https://github.com/make-mcp/claude-deck.git
+git clone https://github.com/make-mcp/andondeck.git
 cd claude-deck
 npm install
 npm run build

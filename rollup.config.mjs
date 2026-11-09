@@ -5,7 +5,7 @@ import path from "node:path";
 import url from "node:url";
 
 const isWatching = !!process.env.ROLLUP_WATCH;
-const sdPlugin = "io.github.claude-deck.plugin.sdPlugin";
+const sdPlugin = "com.andondeck.plugin.sdPlugin";
 
 /**
  * @type {import('rollup').RollupOptions}

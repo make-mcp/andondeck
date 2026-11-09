@@ -17,7 +17,7 @@ import { promisify } from "node:util";
 
 const exec = promisify(execFile);
 
-const UUID = "io.github.claude-deck.plugin";
+const UUID = "com.andondeck.plugin";
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 const source = join(root, `${UUID}.sdPlugin`);
 

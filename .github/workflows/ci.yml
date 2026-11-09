@@ -18,4 +18,4 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run build
-      - run: npx @elgato/cli validate io.github.claude-deck.plugin.sdPlugin
+      - run: npx @elgato/cli validate com.andondeck.plugin.sdPlugin

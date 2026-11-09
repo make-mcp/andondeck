@@ -89,7 +89,7 @@ const DEFAULT_TASK = "Review the current git diff and list anything risky in a f
  * This is deliberately separate from the live session: it spawns its own
  * Claude Code process, so it never disturbs whatever you have open.
  */
-@action({ UUID: "io.github.claude-deck.plugin.headless" })
+@action({ UUID: "com.andondeck.plugin.headless" })
 export class HeadlessAction extends DeckAction<HeadlessSettings> {
 	protected override animates(key: AnyAction<HeadlessSettings>): boolean {
 		const run = runs.get(key.id);

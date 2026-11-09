@@ -5,7 +5,7 @@ import { describe, it } from "node:test";
 
 import { ALERT_PROFILE_FOR_DEVICE, PROFILE_FOR_DEVICE } from "../.test-build/profiles.js";
 
-const DIR = new URL("../io.github.claude-deck.plugin.sdPlugin/", import.meta.url);
+const DIR = new URL("../com.andondeck.plugin.sdPlugin/", import.meta.url);
 
 /** Reads every file from a ZIP archive (stored or deflated). */
 function unzip(buffer) {
@@ -56,7 +56,7 @@ describe("bundled profiles", () => {
 			const keypad = pages.flatMap((page) => page.Controllers).find((c) => c.Type === "Keypad" && c.Actions);
 			const actions = Object.values(keypad.Actions);
 			assert.equal(actions.length, columns * rows, entry.Name);
-			assert.ok(actions.every((a) => a.UUID === "io.github.claude-deck.plugin.alert"), entry.Name);
+			assert.ok(actions.every((a) => a.UUID === "com.andondeck.plugin.alert"), entry.Name);
 		}
 	});
 
@@ -64,7 +64,7 @@ describe("bundled profiles", () => {
 		it(`${entry.Name} is in Stream Deck 7's format and fits its device`, async () => {
 			const files = unzip(await readFile(new URL(`${entry.Name}.streamDeckProfile`, DIR)));
 			const pkg = JSON.parse(files.get("package.json"));
-			assert.deepEqual(pkg.RequiredPlugins.includes("io.github.claude-deck.plugin"), true);
+			assert.deepEqual(pkg.RequiredPlugins.includes("com.andondeck.plugin"), true);
 
 			const outerName = [...files.keys()].find((n) => /^Profiles\/[^/]+\.sdProfile\/manifest\.json$/.test(n));
 			const outer = JSON.parse(files.get(outerName));
@@ -86,7 +86,7 @@ describe("bundled profiles", () => {
 						if (image) {
 							assert.ok(files.has(page.replace("manifest.json", image)), `missing ${image}`);
 						}
-						if (action.UUID.startsWith("io.github.claude-deck.plugin.")) {
+						if (action.UUID.startsWith("com.andondeck.plugin.")) {
 							const declared = manifest.Actions.find((a) => a.UUID === action.UUID);
 							assert.ok(declared, `${action.UUID} is not in the manifest`);
 							assert.ok((declared.Controllers ?? ["Keypad"]).includes(controller.Type), `${action.UUID} on ${controller.Type}`);

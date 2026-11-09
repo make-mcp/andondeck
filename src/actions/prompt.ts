@@ -65,7 +65,7 @@ function resolvePreset(settings: PromptSettings): { text: string; label: string;
 	return { text: preset.text, label: settings.label || preset.label, glyph: preset.glyph };
 }
 
-@action({ UUID: "io.github.claude-deck.plugin.prompt" })
+@action({ UUID: "com.andondeck.plugin.prompt" })
 export class PromptAction extends DeckAction<PromptSettings> {
 	protected override async draw(key: AnyAction<PromptSettings>, settings: PromptSettings): Promise<void> {
 		if (!key.isKey()) {

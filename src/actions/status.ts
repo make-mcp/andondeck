@@ -64,7 +64,7 @@ const MOVING: SessionStatus[] = ["working", "waiting", "compacting"];
  * Pressing it jumps to whichever session needs attention, which makes a single
  * status key usable even with several projects open.
  */
-@action({ UUID: "io.github.claude-deck.plugin.status" })
+@action({ UUID: "com.andondeck.plugin.status" })
 export class StatusAction extends DeckAction<StatusSettings> {
 	protected override animates(_key: AnyAction<StatusSettings>, settings: StatusSettings): boolean {
 		const session = runtime.store.resolve(settings.session);

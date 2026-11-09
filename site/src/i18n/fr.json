@@ -90,7 +90,7 @@
   "p2": "<b>Vos réglages restent les vôtres.</b> Les hooks s'ajoutent à côté des vôtres et se retirent proprement ; une ligne d'état existante continue de fonctionner.",
   "p3": "<b>Lu, jamais envoyé.</b> L'historique d'utilisation vient des transcriptions sur votre disque et y reste.",
   "p4": "<b>Open source, MIT.</b> Chaque ligne est sur GitHub, à lire, forker et améliorer.",
-  "contrib": "Issues et pull requests bienvenues – <a href=\"https://github.com/make-mcp/claude-deck\">github.com/make-mcp/claude-deck</a>.",
+  "contrib": "Issues et pull requests bienvenues – <a href=\"https://github.com/make-mcp/andondeck\">github.com/make-mcp/andondeck</a>.",
   "footer": "Andon Deck · MIT · open source, sans pistage, sans cookies",
   "legalNotice": "Mentions légales",
   "privacy": "Confidentialité",

@@ -290,7 +290,7 @@ async function build() {
 	await writeFile(join(out, "assets/dial-plan.svg"), dial);
 	const dialWeek = svgOf(strip({ title: "7 days", value: "281M", subtitle: "today 41M", tone: "accent", chart: { kind: "bars", series: WEEK } }));
 	await writeFile(join(out, "assets/dial-week.svg"), dialWeek);
-	await cp(join(root, "io.github.claude-deck.plugin.sdPlugin/imgs/plugin/marketplace@2x.png"), join(out, "assets/icon.png"));
+	await cp(join(root, "com.andondeck.plugin.sdPlugin/imgs/plugin/marketplace@2x.png"), join(out, "assets/icon.png"));
 
 	// Static files, with a content hash for cache busting.
 	const hashes = {};

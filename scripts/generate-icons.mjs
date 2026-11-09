@@ -11,7 +11,7 @@ import { fileURLToPath } from "node:url";
 import sharp from "sharp";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
-const out = join(root, "io.github.claude-deck.plugin.sdPlugin", "imgs");
+const out = join(root, "com.andondeck.plugin.sdPlugin", "imgs");
 
 const ACCENT = "#B9B2A8";
 const INK = "#F2EFEA";

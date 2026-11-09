@@ -28,7 +28,7 @@ const cursors = new Map<string, number>();
  * Without a pin every other action tracks the most recently active session,
  * preferring one that is waiting on the user.
  */
-@action({ UUID: "io.github.claude-deck.plugin.session" })
+@action({ UUID: "com.andondeck.plugin.session" })
 export class SessionAction extends DeckAction<SessionSettings> {
 	protected override async draw(unit: AnyAction<SessionSettings>, settings: SessionSettings): Promise<void> {
 		const sessions = runtime.store.list();

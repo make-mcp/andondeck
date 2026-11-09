@@ -54,7 +54,7 @@ const armed = new Map<string, number>();
  * Requests are only held open while one of these keys is actually visible —
  * otherwise Claude Code shows its own prompt in the terminal as usual.
  */
-@action({ UUID: "io.github.claude-deck.plugin.approve" })
+@action({ UUID: "com.andondeck.plugin.approve" })
 export class ApproveAction extends DeckAction<ApproveSettings> {
 	protected override onAppear(ev: WillAppearEvent<ApproveSettings>): void {
 		runtime.registerApprover(ev.action.id);

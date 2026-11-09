@@ -16,7 +16,7 @@
     "skipLibCheck": true,
     "sourceMap": true,
     "rootDir": "src",
-    "outDir": "io.github.claude-deck.plugin.sdPlugin/bin"
+    "outDir": "com.andondeck.plugin.sdPlugin/bin"
   },
   "include": ["src/**/*"]
 }

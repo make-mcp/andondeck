@@ -1,8 +1,8 @@
 node_modules/
 dist/
 *.streamDeckPlugin
-io.github.claude-deck.plugin.sdPlugin/bin/
-io.github.claude-deck.plugin.sdPlugin/logs/
+com.andondeck.plugin.sdPlugin/bin/
+com.andondeck.plugin.sdPlugin/logs/
 .DS_Store
 *.tsbuildinfo
 .test-build/

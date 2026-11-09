@@ -4,14 +4,14 @@
 	"Version": "0.4.1.0",
 	"Author": "claude-deck contributors",
 	"Description": "Control Claude Code from your Stream Deck. Every key's border shows Claude's state the way a factory andon light does: working, waiting for you, or stopped. Live status, prompt queueing, permission approvals, plan limits and usage history, and a full-deck alert when Claude needs you — free and open source.",
-	"Category": "Andon Deck",
+	"Category": "Andon Deck for Claude Code",
 	"CategoryIcon": "imgs/plugin/category-icon",
 	"Icon": "imgs/plugin/marketplace",
-	"URL": "https://github.com/make-mcp/claude-deck",
-	"SupportURL": "https://github.com/make-mcp/claude-deck/issues",
+	"URL": "https://github.com/make-mcp/andondeck",
+	"SupportURL": "https://github.com/make-mcp/andondeck/issues",
 	"CodePath": "bin/plugin.js",
 	"PropertyInspectorPath": "ui/shared.html",
-	"UUID": "io.github.claude-deck.plugin",
+	"UUID": "com.andondeck.plugin",
 	"SDKVersion": 3,
 	"Software": {
 		"MinimumVersion": "6.9"
@@ -31,7 +31,7 @@
 	},
 	"Actions": [
 		{
-			"UUID": "io.github.claude-deck.plugin.status",
+			"UUID": "com.andondeck.plugin.status",
 			"Name": "Claude Status",
 			"Tooltip": "Shows what Claude Code is doing right now: idle, working, waiting for you, or failed.",
 			"Icon": "imgs/actions/status/icon",
@@ -51,7 +51,7 @@
 			]
 		},
 		{
-			"UUID": "io.github.claude-deck.plugin.queue",
+			"UUID": "com.andondeck.plugin.queue",
 			"Name": "Queue Prompt",
 			"Tooltip": "Queue a prompt while Claude is working. It is sent automatically when the current turn ends.",
 			"Icon": "imgs/actions/queue/icon",
@@ -69,7 +69,7 @@
 			]
 		},
 		{
-			"UUID": "io.github.claude-deck.plugin.queue-control",
+			"UUID": "com.andondeck.plugin.queue-control",
 			"Name": "Queue Control",
 			"Tooltip": "Browse, reorder, drop or clear queued prompts. Rotate the dial to scroll through the queue.",
 			"Icon": "imgs/actions/queue-control/icon",
@@ -97,7 +97,7 @@
 			]
 		},
 		{
-			"UUID": "io.github.claude-deck.plugin.approve",
+			"UUID": "com.andondeck.plugin.approve",
 			"Name": "Approve / Deny",
 			"Tooltip": "Answer Claude Code permission requests from your deck instead of the terminal.",
 			"Icon": "imgs/actions/approve/icon",
@@ -121,7 +121,7 @@
 			]
 		},
 		{
-			"UUID": "io.github.claude-deck.plugin.prompt",
+			"UUID": "com.andondeck.plugin.prompt",
 			"Name": "Prompt / Slash Command",
 			"Tooltip": "Replaced by Queue Prompt, which does the same and more. Kept so existing keys keep working.",
 			"Icon": "imgs/actions/prompt/icon",
@@ -139,7 +139,7 @@
 			"VisibleInActionsList": false
 		},
 		{
-			"UUID": "io.github.claude-deck.plugin.session",
+			"UUID": "com.andondeck.plugin.session",
 			"Name": "Session Switcher",
 			"Tooltip": "Pick which Claude Code session the deck controls. Rotate to cycle through running sessions.",
 			"Icon": "imgs/actions/session/icon",
@@ -168,7 +168,7 @@
 			]
 		},
 		{
-			"UUID": "io.github.claude-deck.plugin.headless",
+			"UUID": "com.andondeck.plugin.headless",
 			"Name": "Run Task",
 			"Tooltip": "Run a one-shot Claude task in the background with `claude -p`, without touching your open session.",
 			"Icon": "imgs/actions/headless/icon",
@@ -191,7 +191,7 @@
 			]
 		},
 		{
-			"UUID": "io.github.claude-deck.plugin.usage",
+			"UUID": "com.andondeck.plugin.usage",
 			"Name": "Usage & Timer",
 			"Tooltip": "Turn timer, tool calls, token usage and context pressure for the session you are watching.",
 			"Icon": "imgs/actions/usage/icon",
@@ -220,7 +220,7 @@
 			]
 		},
 		{
-			"UUID": "io.github.claude-deck.plugin.autopilot",
+			"UUID": "com.andondeck.plugin.autopilot",
 			"Name": "Autopilot",
 			"Tooltip": "Approve tool calls for a set stretch of time, then switch itself back off.",
 			"Icon": "imgs/actions/autopilot/icon",
@@ -245,7 +245,7 @@
 			]
 		},
 		{
-			"UUID": "io.github.claude-deck.plugin.halt",
+			"UUID": "com.andondeck.plugin.halt",
 			"Name": "Stop Claude",
 			"Tooltip": "Emergency brake: blocks every further tool call so Claude winds down and reports back.",
 			"Icon": "imgs/actions/halt/icon",
@@ -269,7 +269,7 @@
 			]
 		},
 		{
-			"UUID": "io.github.claude-deck.plugin.model",
+			"UUID": "com.andondeck.plugin.model",
 			"Name": "Model",
 			"Tooltip": "Shows the session's model. A press copies /model with the next one, ready to paste; Claude Code only switches models from its own prompt.",
 			"Icon": "imgs/actions/model/icon",
@@ -287,7 +287,7 @@
 			]
 		},
 		{
-			"UUID": "io.github.claude-deck.plugin.slot",
+			"UUID": "com.andondeck.plugin.slot",
 			"Name": "Session Slot",
 			"Tooltip": "Gives one Claude Code session a key of its own, held for the session's whole life.",
 			"Icon": "imgs/actions/slot/icon",
@@ -305,7 +305,7 @@
 			]
 		},
 		{
-			"UUID": "io.github.claude-deck.plugin.launch",
+			"UUID": "com.andondeck.plugin.launch",
 			"Name": "Launch Claude",
 			"Tooltip": "Opens a terminal with an interactive Claude Code session in a folder you choose.",
 			"Icon": "imgs/actions/launch/icon",
@@ -322,7 +322,7 @@
 			]
 		},
 		{
-			"UUID": "io.github.claude-deck.plugin.setup",
+			"UUID": "com.andondeck.plugin.setup",
 			"Name": "Connect Claude Code",
 			"Tooltip": "One-time setup: installs the Andon Deck hooks into your Claude Code settings and shows bridge health.",
 			"Icon": "imgs/actions/setup/icon",
@@ -347,7 +347,7 @@
 			]
 		},
 		{
-			"UUID": "io.github.claude-deck.plugin.alert",
+			"UUID": "com.andondeck.plugin.alert",
 			"Name": "Alert",
 			"Tooltip": "One key of the full-deck alert that shows when Claude needs you. Placed by the bundled Alert profiles; any press goes back.",
 			"Icon": "imgs/actions/status/icon",

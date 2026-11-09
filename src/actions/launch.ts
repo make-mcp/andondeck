@@ -31,7 +31,7 @@ const launched = new Map<string, number>();
  * Every other key on the deck needs a session to exist first; this is the one
  * that can create one, which is what makes a cold deck useful.
  */
-@action({ UUID: "io.github.claude-deck.plugin.launch" })
+@action({ UUID: "com.andondeck.plugin.launch" })
 export class LaunchAction extends DeckAction<LaunchSettings> {
 	protected override async draw(key: AnyAction<LaunchSettings>, settings: LaunchSettings): Promise<void> {
 		if (!key.isKey()) {

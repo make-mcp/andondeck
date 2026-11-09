@@ -182,7 +182,7 @@ const CHART_LAYOUT = "layouts/chart.json";
  * Token numbers are read from the session transcript when the plugin can reach
  * it; otherwise the key falls back to what the hooks alone can tell it.
  */
-@action({ UUID: "io.github.claude-deck.plugin.usage" })
+@action({ UUID: "com.andondeck.plugin.usage" })
 export class UsageAction extends DeckAction<UsageSettings> {
 	protected override async draw(unit: AnyAction<UsageSettings>, settings: UsageSettings): Promise<void> {
 		const session = runtime.store.resolve(settings.session);

@@ -29,7 +29,7 @@ async function typedArtwork({ command, label }) {
 	return sharp(Buffer.from(svg)).png().toBuffer();
 }
 
-const PLUGIN = "io.github.claude-deck.plugin";
+const PLUGIN = "com.andondeck.plugin";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 // Beside the manifest, not in a subfolder: that is where Elgato's own bundled
 // profiles live, and it is the only arrangement confirmed to be picked up.

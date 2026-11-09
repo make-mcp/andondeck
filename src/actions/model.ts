@@ -35,7 +35,7 @@ function shortName(model?: string): string {
  * The switch travels as a `/model` command through the same queue as any other
  * prompt, so it lands at the next turn boundary rather than mid-turn.
  */
-@action({ UUID: "io.github.claude-deck.plugin.model" })
+@action({ UUID: "com.andondeck.plugin.model" })
 export class ModelAction extends DeckAction<ModelSettings> {
 	protected override async draw(key: AnyAction<ModelSettings>, settings: ModelSettings): Promise<void> {
 		if (!key.isKey()) {

@@ -44,7 +44,7 @@ const LONG_PRESS_MS = 900;
 /** When each Connect key went down, so a hold can be told from a tap. */
 const pressedAt = new Map<string, number>();
 
-@action({ UUID: "io.github.claude-deck.plugin.setup" })
+@action({ UUID: "com.andondeck.plugin.setup" })
 export class SetupAction extends DeckAction<SetupSettings> {
 	protected override async draw(key: AnyAction<SetupSettings>): Promise<void> {
 		if (!key.isKey()) {
@@ -166,7 +166,7 @@ export class SetupAction extends DeckAction<SetupSettings> {
 			const after = visibleOn(device.id);
 			streamDeck.logger.info(`profile switch: ${before.size} → ${after.size} visible keys`);
 
-			if (after.size > before.size || after.has("io.github.claude-deck.plugin.slot")) {
+			if (after.size > before.size || after.has("com.andondeck.plugin.slot")) {
 				handled += 1;
 				continue;
 			}

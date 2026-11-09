@@ -33,7 +33,7 @@ const cursors = new Map<string, number>();
  * On a dial, rotating scrolls the queue and pressing applies the configured
  * action to the entry under the cursor.
  */
-@action({ UUID: "io.github.claude-deck.plugin.queue-control" })
+@action({ UUID: "com.andondeck.plugin.queue-control" })
 export class QueueControlAction extends DeckAction<QueueControlSettings> {
 	protected override async draw(unit: AnyAction<QueueControlSettings>, settings: QueueControlSettings): Promise<void> {
 		const queue = runtime.store.queueFor(settings.session);

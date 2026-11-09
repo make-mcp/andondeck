@@ -20,7 +20,7 @@ type AutopilotSettings = {
  * key that armed it, counts itself down, and is one press away from off — so
  * it is hard to leave running by accident.
  */
-@action({ UUID: "io.github.claude-deck.plugin.autopilot" })
+@action({ UUID: "com.andondeck.plugin.autopilot" })
 export class AutopilotAction extends DeckAction<AutopilotSettings> {
 	protected override async draw(key: AnyAction<AutopilotSettings>, settings: AutopilotSettings): Promise<void> {
 		if (!key.isKey()) {

@@ -30,7 +30,7 @@ let frame = 0;
  * its own window onto one large picture of Clawd waving, so the whole deck
  * becomes the notification. Any press goes back to where you were.
  */
-@action({ UUID: "io.github.claude-deck.plugin.alert" })
+@action({ UUID: "com.andondeck.plugin.alert" })
 export class AlertAction extends SingletonAction {
 	override async onWillAppear(ev: WillAppearEvent): Promise<void> {
 		await runtime.start();

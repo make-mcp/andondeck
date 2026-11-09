@@ -90,7 +90,7 @@
   "p2": "<b>你的设置仍归你所有。</b>hooks 与你自己的并存，可干净移除；已有的状态栏照常运行。",
   "p3": "<b>只读取，从不上传。</b>使用历史来自你硬盘上的会话记录，并且只留在那里。",
   "p4": "<b>开源，MIT 许可。</b>每一行代码都在 GitHub 上，可阅读、可分叉、可改进。",
-  "contrib": "欢迎提交 issue 和 pull request —— <a href=\"https://github.com/make-mcp/claude-deck\">github.com/make-mcp/claude-deck</a>。",
+  "contrib": "欢迎提交 issue 和 pull request —— <a href=\"https://github.com/make-mcp/andondeck\">github.com/make-mcp/andondeck</a>。",
   "footer": "Andon Deck · MIT · 开源，无追踪，无 Cookie",
   "legalNotice": "法律声明",
   "privacy": "隐私",

@@ -99,9 +99,9 @@ The generated helper at `~/.claude/claude-deck/idle-wake.mjs` is safe to delete 
 
 ```
 # Windows
-%APPDATA%\Elgato\StreamDeck\Plugins\io.github.claude-deck.plugin.sdPlugin\logs
+%APPDATA%\Elgato\StreamDeck\Plugins\com.andondeck.plugin.sdPlugin\logs
 # macOS
-~/Library/Application Support/com.elgato.StreamDeck/Plugins/io.github.claude-deck.plugin.sdPlugin/logs
+~/Library/Application Support/com.elgato.StreamDeck/Plugins/com.andondeck.plugin.sdPlugin/logs
 ```
 
 ## "Claude reaches it: NO"

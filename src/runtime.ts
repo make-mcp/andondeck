@@ -243,7 +243,7 @@ class Runtime extends EventEmitter<RuntimeEvents> {
 			// and do not later "switch back" a deck that never left.
 			setTimeout(() => {
 				const shown = [...streamDeck.actions].some(
-					(unit) => unit.manifestId === "io.github.claude-deck.plugin.alert" && unit.device.id === device.id,
+					(unit) => unit.manifestId === "com.andondeck.plugin.alert" && unit.device.id === device.id,
 				);
 				if (!shown && this.#alerting.delete(device.id)) {
 					streamDeck.logger.warn(`alert: ${profile} did not appear on ${device.name} — the profile is not installed`);
@@ -275,7 +275,7 @@ class Runtime extends EventEmitter<RuntimeEvents> {
 		// what tells.
 		setTimeout(() => {
 			const stillShowing = [...streamDeck.actions].some(
-				(unit) => unit.manifestId === "io.github.claude-deck.plugin.alert" && unit.device.id === deviceId,
+				(unit) => unit.manifestId === "com.andondeck.plugin.alert" && unit.device.id === deviceId,
 			);
 			if (!stillShowing) {
 				this.#alerting.delete(deviceId);

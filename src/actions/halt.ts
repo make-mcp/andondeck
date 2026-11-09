@@ -17,7 +17,7 @@ type HaltSettings = SessionScoped & {
  * that follows — which stops the agent from touching anything else and makes it
  * wind down and report back. The brake releases itself once the turn ends.
  */
-@action({ UUID: "io.github.claude-deck.plugin.halt" })
+@action({ UUID: "com.andondeck.plugin.halt" })
 export class HaltAction extends DeckAction<HaltSettings> {
 	protected override async draw(key: AnyAction<HaltSettings>, settings: HaltSettings): Promise<void> {
 		if (!key.isKey()) {

@@ -293,12 +293,12 @@ const SAVE_MS = 5 * 60_000;
 /** Where the plugin keeps data of its own, outside the plugin folder an update replaces. */
 export function dataDir(): string {
 	if (process.platform === "win32") {
-		return join(process.env.APPDATA ?? join(homedir(), "AppData", "Roaming"), "claude-deck");
+		return join(process.env.APPDATA ?? join(homedir(), "AppData", "Roaming"), "andon-deck");
 	}
 	if (process.platform === "darwin") {
-		return join(homedir(), "Library", "Application Support", "claude-deck");
+		return join(homedir(), "Library", "Application Support", "andon-deck");
 	}
-	return join(process.env.XDG_DATA_HOME ?? join(homedir(), ".local", "share"), "claude-deck");
+	return join(process.env.XDG_DATA_HOME ?? join(homedir(), ".local", "share"), "andon-deck");
 }
 
 /**

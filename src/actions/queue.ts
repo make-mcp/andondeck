@@ -40,7 +40,7 @@ const DEFAULT_PROMPT = "Continue where you left off.";
  * While Claude is working the `Stop` hook feeds it straight back in; when the
  * session is already idle the optional idle-wake helper delivers it instead.
  */
-@action({ UUID: "io.github.claude-deck.plugin.queue" })
+@action({ UUID: "com.andondeck.plugin.queue" })
 export class QueuePromptAction extends DeckAction<QueueSettings> {
 	protected override async draw(key: AnyAction<QueueSettings>, settings: QueueSettings): Promise<void> {
 		if (!key.isKey()) {
